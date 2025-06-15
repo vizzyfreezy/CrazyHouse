@@ -1,135 +1,137 @@
 import json
 import os
 from jinja2 import Environment, FileSystemLoader
-from datetime import datetime
+from datetime import datetime, timezone
 
-# --- CONFIGURATION ---
+# --- CONFIGURATION (OLD TABLES - GOLD STANDARD) ---
 DATA_DIR = "data_output"
 LAST_WEEK_DIR = "data_output_lastweek"
-TEMPLATE_DIR = "templates"
-TEMPLATE_NAME = "report_template.html"
-OUTPUT_FILENAME = "Crazyhouse_Weekly_Report.html"
-
-REPORT_TITLE = "CNO Crazyhouse Weekly Report"
-USERNAME = "BayorMiller"
-
-# --- NEW: CONTROL TABLE LENGTHS HERE ---
-TABLE_LIMITS = {
-    "medals": 10,
-    "ppg": 10,
-    "berserk": 10,
-    "iron_man": 10
-}
-
-# --- MINIMUM GAME REQUIREMENTS ---
+TABLE_LIMITS = {"medals": 10, "ppg": 10, "berserk": 10, "iron_man": 10, "power_rankings": 15}
 PPG_MIN_TOTAL_GAMES = 20
 BERSERK_MIN_GAMES = 10
 
+# --- CONFIGURATION (NEW TABLES) ---
+SOURCE_DIR_GAMES = "detailed_games"
+POWER_RANKING_ITERATIONS = 100
+POWER_RANKING_INITIAL_SCORE = 1000
+POWER_RANKING_TRANSFER_FACTOR = 0.03
 
-def load_json_file(filepath):
-    """Safely loads a JSON file."""
+# --- GLOBAL CONFIG ---
+TEMPLATE_DIR = "templates"
+TEMPLATE_NAME = "report_template.html"
+OUTPUT_FILENAME = "Crazyhouse_Weekly_Report.html"
+USERNAME = "BayorMiller"
+
+# =================================================================================
+# SECTION 1: "GOLD STANDARD" LOGIC - RESTORED AND PRESERVED
+# =================================================================================
+
+def load_json_file(filepath, default=None):
+    if default is None: default = {}
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
+        with open(filepath, 'r', encoding='utf-8') as f: return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError): return default
 
 def get_last_week_ranks(last_week_data, key_func, id_field='player'):
-    """Helper function to create a map of player -> last week's rank."""
-    if not last_week_data:
-        return {}
-    
-    # Filter and sort last week's data to establish ranks
-    last_week_list = [v for v in last_week_data.values()]
+    if not last_week_data: return {}
+    last_week_list = list(last_week_data.values())
     last_week_list.sort(key=key_func, reverse=True)
-    
-    return {item[id_field]: rank + 1 for rank, item in enumerate(last_week_list)}
+    return {item.get(id_field): rank + 1 for rank, item in enumerate(last_week_list)}
 
 def add_rank_trend(ranked_list, last_week_ranks, id_field='player'):
-    """Adds a 'rank_change' field to each item in the ranked list."""
     for i, item in enumerate(ranked_list):
-        current_rank = i + 1
-        player_id = item[id_field]
+        current_rank, player_id = i + 1, item[id_field]
         last_rank = last_week_ranks.get(player_id)
-        
-        if last_rank is None:
-            item['rank_change'] = 'new'
-        else:
-            item['rank_change'] = last_rank - current_rank # Positive is UP, Negative is DOWN
+        if last_rank is None: item['rank_change'] = 'new'
+        else: item['rank_change'] = last_rank - current_rank
     return ranked_list
 
 def process_medal_data(current_medals, last_week_medals):
-    """Calculates podium score and sorts players, including rank trends."""
-    processed = []
-    for player, medals in current_medals.items():
-        score = (medals.get('gold', 0) * 3) + (medals.get('silver', 0) * 2) + (medals.get('bronze', 0) * 1)
-        processed.append({'player': player, 'score': score, 'gold': medals.get('gold', 0), 'silver': medals.get('silver', 0), 'bronze': medals.get('bronze', 0)})
-    
+    processed = [{'player': p, 'score': (m.get('gold',0)*3 + m.get('silver',0)*2 + m.get('bronze',0)), **m} for p, m in current_medals.items()]
     processed.sort(key=lambda x: (x['score'], x['gold'], x['silver']), reverse=True)
-    
-    # Get last week's ranks
     lw_key_func = lambda x: ((x.get('gold',0)*3 + x.get('silver',0)*2 + x.get('bronze',0)), x.get('gold',0), x.get('silver',0))
-    lw_ranks = get_last_week_ranks({p: m for p, m in last_week_medals.items()}, lw_key_func, id_field='name') # Assuming player name is the key
-    
-    processed = add_rank_trend(processed, {p: r for p, r in lw_ranks.items()}, id_field='player')
-    return processed[:TABLE_LIMITS['medals']]
-
+    lw_ranks = get_last_week_ranks(last_week_medals, lw_key_func, id_field='name')
+    processed = add_rank_trend(processed, lw_ranks, id_field='player')
+    return processed
 
 def process_ppg_data(overall_stats, last_week_stats):
-    """Calculates PPG and includes rank trends."""
-    eligible_players = {p: s for p, s in overall_stats.items() if s.get('total_games', 0) >= PPG_MIN_TOTAL_GAMES}
-    processed = []
-    for player, stats in eligible_players.items():
-        total_games = stats['total_games']
-        ppg = (stats['total_score'] / total_games) if total_games > 0 else 0
-        processed.append({'name': player, 'ppg': ppg, 'total_score': stats['total_score'], 'total_games': total_games})
-    
+    eligible = {p: s for p, s in overall_stats.items() if s.get('total_games', 0) >= PPG_MIN_TOTAL_GAMES}
+    processed = [{'player': p, 'ppg': s['total_score']/s['total_games'] if s['total_games']>0 else 0, **s} for p, s in eligible.items()]
     processed.sort(key=lambda x: x['ppg'], reverse=True)
-    
-    lw_eligible_players = {p: s for p, s in last_week_stats.items() if s.get('total_games', 0) >= PPG_MIN_TOTAL_GAMES}
-    lw_key_func = lambda s: (s['total_score'] / s['total_games']) if s.get('total_games',0) > 0 else 0
-    lw_ranks = get_last_week_ranks(lw_eligible_players, lw_key_func, id_field='name')
-
-    processed = add_rank_trend(processed, lw_ranks, id_field='name')
-    return processed[:TABLE_LIMITS['ppg']]
+    lw_eligible = {p: s for p, s in last_week_stats.items() if s.get('total_games', 0) >= PPG_MIN_TOTAL_GAMES}
+    lw_key_func = lambda s: (s.get('total_score',0) / s.get('total_games',1))
+    lw_ranks = get_last_week_ranks(lw_eligible, lw_key_func, id_field='name')
+    processed = add_rank_trend(processed, lw_ranks, id_field='player')
+    return processed
 
 def process_berserk_data(berserk_table, last_week_berserk):
-    """Creates the combined Berserk table with rank trends."""
-    eligible_players = {p: s for p, s in berserk_table.items() if s.get('berserk_games', 0) >= BERSERK_MIN_GAMES}
+    eligible = {p: s for p, s in berserk_table.items() if s.get('berserk_games', 0) >= BERSERK_MIN_GAMES}
     processed = []
-    for player, stats in eligible_players.items():
-        bz_games = stats['berserk_games']
-        total_games_podium = stats.get('total_games_in_podium_summary', 0)
-        bz_wins = stats.get('berserk_wins', 0)
-        freq = (bz_games / total_games_podium) if total_games_podium > 0 else 0
-        win_rate = (bz_wins / bz_games) if bz_games > 0 else 0
-        processed.append({'name': player, 'berserk_freq': freq, 'win_rate': win_rate, 'berserk_wins': bz_wins, 'berserk_losses': bz_games - bz_wins})
-
-    processed.sort(key=lambda x: x['berserk_freq'], reverse=True)
-    
-    lw_eligible_players = {p: s for p, s in last_week_berserk.items() if s.get('berserk_games', 0) >= BERSERK_MIN_GAMES}
-    lw_key_func = lambda s: (s['berserk_games'] / s['total_games_in_podium_summary']) if s.get('total_games_in_podium_summary',0) > 0 else 0
-    lw_ranks = get_last_week_ranks(lw_eligible_players, lw_key_func, id_field='name')
-    
-    processed = add_rank_trend(processed, lw_ranks, id_field='name')
-    return processed[:TABLE_LIMITS['berserk']]
+    for player, stats in eligible.items():
+        freq = stats['berserk_games']/stats['total_games_in_podium_summary'] if stats['total_games_in_podium_summary']>0 else 0
+        win_rate = stats['berserk_wins']/stats['berserk_games'] if stats['berserk_games']>0 else 0
+        processed.append({'player': player, 'freq': freq, 'win_rate': win_rate, **stats})
+    processed.sort(key=lambda x: x['freq'], reverse=True)
+    lw_eligible = {p: s for p, s in last_week_berserk.items() if s.get('berserk_games', 0) >= BERSERK_MIN_GAMES}
+    lw_key_func = lambda s: (s.get('berserk_games',0) / s.get('total_games_in_podium_summary',1))
+    lw_ranks = get_last_week_ranks(lw_eligible, lw_key_func, id_field='name')
+    processed = add_rank_trend(processed, lw_ranks, id_field='player')
+    return processed
 
 def process_iron_man_data(overall_stats, last_week_stats):
-    """Ranks players by total games played with trends."""
-    processed = [{'player': player, 'total_games': stats.get('total_games', 0)} for player, stats in overall_stats.items()]
-    processed.sort(key=lambda x: x['total_games'], reverse=True)
-    
+    processed = [{'player': p, **s} for p, s in overall_stats.items()]
+    processed.sort(key=lambda x: x.get('total_games', 0), reverse=True)
     lw_key_func = lambda s: s.get('total_games', 0)
     lw_ranks = get_last_week_ranks(last_week_stats, lw_key_func, id_field='name')
-    
     processed = add_rank_trend(processed, lw_ranks, id_field='player')
-    return processed[:TABLE_LIMITS['iron_man']]
+    return processed
+
+# =================================================================================
+# SECTION 2: NEW FEATURES LOGIC - ADDED SEPARATELY
+# =================================================================================
+
+def load_all_detailed_games(games_dir):
+    all_games = []
+    for filename in os.listdir(games_dir):
+        if filename.endswith('.json'):
+            all_games.extend(load_json_file(os.path.join(games_dir, filename), default=[]))
+    return all_games
+
+def calculate_power_rankings(all_games):
+    if not all_games: return []
+    players = {g['winner_name'] for g in all_games} | {g['loser_name'] for g in all_games}
+    power_scores = {p: float(POWER_RANKING_INITIAL_SCORE) for p in players}
+    total_score_pool = len(players) * POWER_RANKING_INITIAL_SCORE
+    for _ in range(POWER_RANKING_ITERATIONS):
+        new_scores = power_scores.copy()
+        for g in all_games:
+            transfer = POWER_RANKING_TRANSFER_FACTOR * power_scores[g['loser_name']]
+            new_scores[g['winner_name']] += transfer
+            new_scores[g['loser_name']] -= transfer
+        current_total = sum(new_scores.values())
+        if current_total == 0: continue
+        scaling_factor = total_score_pool / current_total
+        power_scores = {p: s * scaling_factor for p, s in new_scores.items()}
+    ranked_list = [{'player': p, 'score': s} for p, s in power_scores.items()]
+    ranked_list.sort(key=lambda x: x['score'], reverse=True)
+    return ranked_list
+
+def calculate_inclusive_stats(all_games):
+    if not all_games: return {"giant_killer": None, "marathon_man": None}
+    biggest_upset = max(all_games, key=lambda g: g['loser_rating'] - g['winner_rating'], default=None)
+    if biggest_upset and (biggest_upset['loser_rating'] - biggest_upset['winner_rating'] <= 0): biggest_upset = None
+    longest_game = max(all_games, key=lambda g: g['moves'], default=None)
+    return {"giant_killer": biggest_upset, "marathon_man": longest_game}
+
+# =================================================================================
+# SECTION 3: THE UNIFIED MAIN FUNCTION
+# =================================================================================
 
 def main():
-    print("--- CNO Stats Engine V2: Starting Report Generation ---")
+    print("--- CNO Stats Engine V12: Generating Final Unified Report ---")
 
-    # 1. Load all necessary data
-    print("Loading current and last week's data files...")
+    # --- PIPELINE A: GOLD STANDARD FOR OLD TABLES ---
+    print("Loading pre-processed data for standard tables...")
     current_medals = load_json_file(os.path.join(DATA_DIR, "medal_table.json"))
     current_overall = load_json_file(os.path.join(DATA_DIR, "player_overall_stats.json"))
     current_berserk = load_json_file(os.path.join(DATA_DIR, "berserk_table.json"))
@@ -137,43 +139,39 @@ def main():
     last_week_medals = load_json_file(os.path.join(LAST_WEEK_DIR, "medal_table.json"))
     last_week_overall = load_json_file(os.path.join(LAST_WEEK_DIR, "player_overall_stats.json"))
     last_week_berserk = load_json_file(os.path.join(LAST_WEEK_DIR, "berserk_table.json"))
-
-    # Add player names to stats dicts to make them uniform for helper functions
+    
+    # Gold standard requires adding 'name' key for uniform processing in helper
     for name, data in last_week_overall.items(): data['name'] = name
     for name, data in last_week_medals.items(): data['name'] = name
     for name, data in last_week_berserk.items(): data['name'] = name
 
-    # 2. Process data for the template, now including trend calculation
-    print("Processing stats and calculating rank trends...")
+    print("Processing standard tables with trend analysis...")
     medal_data = process_medal_data(current_medals, last_week_medals)
     ppg_data = process_ppg_data(current_overall, last_week_overall)
     berserk_data = process_berserk_data(current_berserk, last_week_berserk)
     iron_man_data = process_iron_man_data(current_overall, last_week_overall)
 
-    # 3. Prepare context for Jinja2 template
+    # --- PIPELINE B: NEW FEATURES ---
+    print("Loading detailed game data for advanced stats...")
+    all_games = load_all_detailed_games(SOURCE_DIR_GAMES)
+    power_rankings = calculate_power_rankings(all_games)
+    inclusive_stats = calculate_inclusive_stats(all_games)
+
+    # --- FINAL CONTEXT FOR TEMPLATE ---
     context = {
-        'report_title': REPORT_TITLE,
-        'generation_date': datetime.now().strftime("%B %d, %Y at %I:%M %p"),
-        'username': USERNAME,
-        'table_limits': TABLE_LIMITS,
-        'ppg_min_total_games': PPG_MIN_TOTAL_GAMES,
-        'medal_data': medal_data,
-        'ppg_data': ppg_data,
-        'berserk_data': berserk_data,
-        'iron_man_data': iron_man_data,
+        'generation_date': datetime.now().strftime("%B %d, %Y at %I:%M %p"), 'username': USERNAME, 'table_limits': TABLE_LIMITS, 'ppg_min_total_games': PPG_MIN_TOTAL_GAMES,
+        'power_rankings': power_rankings[:TABLE_LIMITS['power_rankings']], 
+        'inclusive_stats': inclusive_stats,
+        'medal_data': medal_data[:TABLE_LIMITS['medals']], 
+        'ppg_data': ppg_data[:TABLE_LIMITS['ppg']],
+        'berserk_data': berserk_data[:TABLE_LIMITS['berserk']], 
+        'iron_man_data': iron_man_data[:TABLE_LIMITS['iron_man']],
     }
 
-    # 4. Render the HTML report
-    print("Rendering final HTML report...")
     env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
     template = env.get_template(TEMPLATE_NAME)
-    output_html = template.render(context)
-
-    with open(OUTPUT_FILENAME, 'w', encoding='utf-8') as f:
-        f.write(output_html)
-        
-    print(f"\n✅ Success! Report generated: {os.path.abspath(OUTPUT_FILENAME)}")
-    print("--- CNO Stats Engine V2: Finished ---")
-
+    with open(OUTPUT_FILENAME, 'w', encoding='utf-8') as f: f.write(template.render(context))
+    print(f"\n✅ Success! Definitive report generated: {os.path.abspath(OUTPUT_FILENAME)}")
+    
 if __name__ == "__main__":
     main()
