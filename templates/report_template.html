@@ -6,91 +6,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🏆 {{ report_title }} 🏆</title>
     <style>
-        /* --- Base & Fonts --- */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f8fafc; /* Light gray background (slate-50) */
-            color: #020817; /* Dark text (slate-950) */
-            margin: 0;
-            padding: 2rem;
-        }
-
-        /* --- Layout --- */
-        .container {
-            max-width: 900px;
-            margin: auto;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 2rem;
-        }
-
-        /* --- Typography --- */
-        h1 {
-            font-size: 2.25rem;
-            font-weight: 800;
-            text-align: center;
-            color: #020817; /* Darker heading */
-            margin-bottom: 0.5rem;
-        }
-        .timestamp {
-            text-align: center;
-            font-size: 0.875rem;
-            color: #64748b; /* Muted text (slate-500) */
-            margin-bottom: 2rem;
-        }
-        
-        /* --- Card Component Style (Core of shadcn look) --- */
-        .card {
-            background-color: #ffffff; /* White card background */
-            border: 1px solid #e2e8f0; /* Soft border (slate-200) */
-            border-radius: 0.75rem; /* Rounded corners */
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px 0 rgba(0,0,0,0.05);
-        }
-        .card-header {
-            margin-bottom: 1rem;
-        }
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin: 0;
-            color: #1e293b; /* slate-800 */
-        }
-        .card-description {
-            font-size: 0.875rem;
-            color: #64748b; /* slate-500 */
-            margin-top: 0.25rem;
-        }
-
-        /* --- Table Styling --- */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f8fafc; color: #020817; margin: 0; padding: 2rem; }
+        .container { max-width: 900px; margin: auto; display: grid; grid-template-columns: 1fr; gap: 2rem; }
+        h1 { font-size: 2.25rem; font-weight: 800; text-align: center; color: #020817; margin-bottom: 0.5rem; }
+        .timestamp { text-align: center; font-size: 0.875rem; color: #64748b; margin-bottom: 2rem; }
+        .card { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px 0 rgba(0,0,0,0.05); }
+        .card-header { margin-bottom: 1rem; }
+        .card-title { font-size: 1.25rem; font-weight: 600; margin: 0; color: #1e293b; }
+        .card-description { font-size: 0.875rem; color: #64748b; margin-top: 0.25rem; }
         .table-wrapper { overflow-x: auto; }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.875rem;
-        }
-        th, td {
-            padding: 0.75rem 1rem;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0; /* slate-200 */
-        }
-        th {
-            font-weight: 600;
-            color: #475569; /* slate-600 */
-            white-space: nowrap;
-        }
-        tr:last-child td {
-            border-bottom: 0;
-        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { font-weight: 600; color: #475569; white-space: nowrap; }
+        tr:last-child td { border-bottom: 0; }
         td.number, th.number { text-align: center; }
         td.player-name { font-weight: 500; }
-
-        /* --- Trend Indicators --- */
-        .trend-up { color: #16a34a; font-weight: 600; } /* green-600 */
-        .trend-down { color: #dc2626; font-weight: 600; } /* red-600 */
-
-        /* --- Footer --- */
         .footer { text-align: center; margin-top: 2rem; font-size: 0.8rem; color: #94a3b8; }
+        
+        /* --- CSS FOR EMBEDDED TREND INDICATOR --- */
+        .trend {
+            display: inline-block;
+            font-size: 0.7em;
+            font-weight: 700;
+            margin-left: 0.3rem;
+            vertical-align: 0.2em;
+            padding: 0.1em 0.3em;
+            border-radius: 0.25rem;
+            line-height: 1;
+            width: 2.2em; /* Ensures indicators have similar width for alignment */
+            text-align: center;
+        }
+        .trend-up { background-color: #dcfce7; color: #15803d; } /* Green */
+        .trend-down { background-color: #fee2e2; color: #b91c1c; } /* Red */
+        .trend-new { background-color: #dbeafe; color: #1e40af; } /* Blue */
+        .trend-neutral { background-color: #f1f5f9; color: #475569; } /* Gray (NEW) */
     </style>
 </head>
 <body>
@@ -100,19 +49,27 @@
             <p class="timestamp">Powered By BayorMiller | Generated: {{ generation_date }}</p>
         </header>
 
-        <!-- CATEGORY 1: THE ELITES (Your 'Top Dogs' & 'Most Lethal' combined) -->
+        <!-- CATEGORY 1: THE ELITES -->
         <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">🏆 Top Dogs (Overall Performance)</h2>
-            </div>
+            <div class="card-header"><h2 class="card-title">🏆 Top Dogs (Overall Performance)</h2></div>
             {% if medal_data %}
-            <h3 class="card-description">Podium Power Rankings (Score: Gx3, Sx2, Bx1)</h3>
+            <h3 class="card-description">Podium Power Rankings (Top {{ table_limits.medals }})</h3>
             <div class="table-wrapper">
                 <table>
                     <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Score</th><th class="number">🥇</th><th class="number">🥈</th><th class="number">🥉</th></tr></thead>
                     <tbody>
                     {% for item in medal_data %}
-                    <tr><td class="number">{{ loop.index }}</td><td class="player-name">{{ item.player }}</td><td class="number"><b>{{ item.score }}</b></td><td class="number">{{ item.gold }}</td><td class="number">{{ item.silver }}</td><td class="number">{{ item.bronze }}</td></tr>
+                    <tr>
+                        <td class="number">
+                            {{ loop.index }}
+                            {% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>
+                            {% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>
+                            {% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>
+                            {% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}
+                        </td>
+                        <td class="player-name">{{ item.player }}</td>
+                        <td class="number"><b>{{ item.score }}</b></td><td class="number">{{ item.gold }}</td><td class="number">{{ item.silver }}</td><td class="number">{{ item.bronze }}</td>
+                    </tr>
                     {% endfor %}
                     </tbody>
                 </table>
@@ -120,16 +77,24 @@
             {% endif %}
 
             {% if ppg_data %}
-            <div class="card-header" style="margin-top: 2rem; margin-bottom: 0.5rem;">
-                <h2 class="card-title">Most Lethal (Precision)</h2>
-            </div>
-            <p class="card-description" style="margin-bottom: 1rem;">If you come across these guys then resignation is the best move. (avg point per game min: {{ppg_min_total_games}} games)</p>
+            <div class="card-header" style="margin-top: 2rem; margin-bottom: 0.5rem;"><h2 class="card-title">Most Lethal (Precision)</h2></div>
+            <p class="card-description" style="margin-bottom: 1rem;">If you come across these guys then resignation is the best move. (Top {{ table_limits.ppg }}, min {{ppg_min_total_games}} games)</p>
             <div class="table-wrapper">
                 <table>
                     <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">PPG</th><th class="number">Total Points</th><th class="number">Total Games</th></tr></thead>
                     <tbody>
                     {% for item in ppg_data %}
-                    <tr><td class="number">{{ loop.index }}</td><td class="player-name">{{ item.name }}</td><td class="number">{{ "%.2f"|format(item.ppg) }}</td><td class="number">{{ item.total_score }}</td><td class="number">{{ item.total_games }}</td></tr>
+                    <tr>
+                        <td class="number">
+                            {{ loop.index }}
+                            {% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>
+                            {% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>
+                            {% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>
+                            {% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}
+                        </td>
+                        <td class="player-name">{{ item.name }}</td>
+                        <td class="number">{{ "%.2f"|format(item.ppg) }}</td><td class="number">{{ item.total_score }}</td><td class="number">{{ item.total_games }}</td>
+                    </tr>
                     {% endfor %}
                     </tbody>
                 </table>
@@ -137,19 +102,27 @@
             {% endif %}
         </div>
 
-        <!-- CATEGORY 2: PLAYSTYLE & AGGRESSION (Your 'Agba Berserkers') -->
+        <!-- CATEGORY 2: PLAYSTYLE & AGGRESSION -->
         <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">🔥 Agba Berserkers</h2>
-                <p class="card-description">They don't care if you are Magnus, you go still collect berserk and get spanked.</p>
-            </div>
+            <div class="card-header"><h2 class="card-title">🔥 Agba Berserkers</h2>
+            <p class="card-description">They don't care if you are Magnus, you go still collect berserk and get spanked. (Top {{ table_limits.berserk }})</p></div>
             {% if berserk_data %}
             <div class="table-wrapper">
                 <table>
                     <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">BZ Freq.</th><th class="number">BZ Win %</th><th class="number">BZ Wins</th><th class="number">BZ Losses</th></tr></thead>
                     <tbody>
                     {% for item in berserk_data %}
-                    <tr><td class="number">{{ loop.index }}</td><td class="player-name">{{ item.name }}</td><td class="number">{{ "%.1f%%"|format(item.berserk_freq * 100) }}</td><td class="number">{{ "%.1f%%"|format(item.win_rate * 100) }}</td><td class="number">{{ item.berserk_wins }}</td><td class="number">{{ item.berserk_losses }}</td></tr>
+                    <tr>
+                        <td class="number">
+                            {{ loop.index }}
+                            {% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>
+                            {% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>
+                            {% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>
+                            {% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}
+                        </td>
+                        <td class="player-name">{{ item.name }}</td>
+                        <td class="number">{{ "%.1f%%"|format(item.berserk_freq * 100) }}</td><td class="number">{{ "%.1f%%"|format(item.win_rate * 100) }}</td><td class="number">{{ item.berserk_wins }}</td><td class="number">{{ item.berserk_losses }}</td>
+                    </tr>
                     {% endfor %}
                     </tbody>
                 </table>
@@ -157,44 +130,26 @@
             {% endif %}
         </div>
 
-        <!-- CATEGORY 3: DEDICATION (Your 'Agba Loot Hunters') -->
+        <!-- CATEGORY 3: DEDICATION -->
         <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">🗿 Agba Loot Hunters (Dedication)</h2>
-                <p class="card-description">These guys no dey take eye see link with loot dem go raid am.</p>
-            </div>
+            <div class="card-header"><h2 class="card-title">🗿 Agba Loot Hunters (Dedication)</h2>
+            <p class="card-description">These guys no dey take eye see link with loot dem go raid am. (Top {{ table_limits.iron_man }})</p></div>
             {% if iron_man_data %}
             <div class="table-wrapper">
                 <table>
-                    <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Total Games Played</th></tr></thead>
+                    <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Total Games</th></tr></thead>
                     <tbody>
                     {% for item in iron_man_data %}
-                    <tr><td class="number">{{ loop.index }}</td><td class="player-name">{{ item.player }}</td><td class="number">{{ item.total_games }}</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- CATEGORY 4: WEEKLY MOVERS (NEW CATEGORY) -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">📈 Weekly Movers (Trends)</h2>
-                <p class="card-description">Who's hot and who's not? Biggest PPG change from last week.</p>
-            </div>
-             {% if ppg_trend_data %}
-            <div class="table-wrapper">
-                <table>
-                    <thead><tr><th class="player-name">Player</th><th class="number">Current PPG</th><th class="number">Change</th></tr></thead>
-                    <tbody>
-                    {% for item in ppg_trend_data %}
                     <tr>
-                        <td class="player-name">{{ item.player }}</td>
-                        <td class="number">{{ "%.2f"|format(item.current_ppg) }}</td>
-                        <td class="number {% if item.ppg_change > 0 %}trend-up{% else %}trend-down{% endif %}">
-                            {% if item.ppg_change > 0 %}▲{% else %}▼{% endif %} {{ "%.2f"|format(item.ppg_change|abs) }}
+                        <td class="number">
+                            {{ loop.index }}
+                            {% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>
+                            {% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>
+                            {% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>
+                            {% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}
                         </td>
+                        <td class="player-name">{{ item.player }}</td>
+                        <td class="number">{{ item.total_games }}</td>
                     </tr>
                     {% endfor %}
                     </tbody>
@@ -203,9 +158,7 @@
             {% endif %}
         </div>
         
-        <div class="footer">
-            {{ username }} Arena Series. CNO Stats Engine.
-        </div>
+        <div class="footer">{{ username }} Arena Series. CNO Stats Engine V2.</div>
     </div>
 </body>
 </html>

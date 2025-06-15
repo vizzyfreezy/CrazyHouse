@@ -6,129 +6,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🏆 CNO Crazyhouse Weekly Report 🏆</title>
     <style>
-        /* --- Base & Fonts --- */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f8fafc; /* Light gray background (slate-50) */
-            color: #020817; /* Dark text (slate-950) */
-            margin: 0;
-            padding: 2rem;
-        }
-
-        /* --- Layout --- */
-        .container {
-            max-width: 900px;
-            margin: auto;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 2rem;
-        }
-
-        /* --- Typography --- */
-        h1 {
-            font-size: 2.25rem;
-            font-weight: 800;
-            text-align: center;
-            color: #020817; /* Darker heading */
-            margin-bottom: 0.5rem;
-        }
-        .timestamp {
-            text-align: center;
-            font-size: 0.875rem;
-            color: #64748b; /* Muted text (slate-500) */
-            margin-bottom: 2rem;
-        }
-        
-        /* --- Card Component Style (Core of shadcn look) --- */
-        .card {
-            background-color: #ffffff; /* White card background */
-            border: 1px solid #e2e8f0; /* Soft border (slate-200) */
-            border-radius: 0.75rem; /* Rounded corners */
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px 0 rgba(0,0,0,0.05);
-        }
-        .card-header {
-            margin-bottom: 1rem;
-        }
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin: 0;
-            color: #1e293b; /* slate-800 */
-        }
-        .card-description {
-            font-size: 0.875rem;
-            color: #64748b; /* slate-500 */
-            margin-top: 0.25rem;
-        }
-
-        /* --- Table Styling --- */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f8fafc; color: #020817; margin: 0; padding: 2rem; }
+        .container { max-width: 900px; margin: auto; display: grid; grid-template-columns: 1fr; gap: 2rem; }
+        h1 { font-size: 2.25rem; font-weight: 800; text-align: center; color: #020817; margin-bottom: 0.5rem; }
+        .timestamp { text-align: center; font-size: 0.875rem; color: #64748b; margin-bottom: 2rem; }
+        .card { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px 0 rgba(0,0,0,0.05); }
+        .card-header { margin-bottom: 1rem; }
+        .card-title { font-size: 1.25rem; font-weight: 600; margin: 0; color: #1e293b; }
+        .card-description { font-size: 0.875rem; color: #64748b; margin-top: 0.25rem; }
         .table-wrapper { overflow-x: auto; }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.875rem;
-        }
-        th, td {
-            padding: 0.75rem 1rem;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0; /* slate-200 */
-        }
-        th {
-            font-weight: 600;
-            color: #475569; /* slate-600 */
-            white-space: nowrap;
-        }
-        tr:last-child td {
-            border-bottom: 0;
-        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { font-weight: 600; color: #475569; white-space: nowrap; }
+        tr:last-child td { border-bottom: 0; }
         td.number, th.number { text-align: center; }
         td.player-name { font-weight: 500; }
-
-        /* --- Trend Indicators --- */
-        .trend-up { color: #16a34a; font-weight: 600; } /* green-600 */
-        .trend-down { color: #dc2626; font-weight: 600; } /* red-600 */
-
-        /* --- Footer --- */
         .footer { text-align: center; margin-top: 2rem; font-size: 0.8rem; color: #94a3b8; }
+        
+        /* --- CSS FOR EMBEDDED TREND INDICATOR --- */
+        .trend {
+            display: inline-block;
+            font-size: 0.7em;
+            font-weight: 700;
+            margin-left: 0.3rem;
+            vertical-align: 0.2em;
+            padding: 0.1em 0.3em;
+            border-radius: 0.25rem;
+            line-height: 1;
+            width: 2.2em; /* Ensures indicators have similar width for alignment */
+            text-align: center;
+        }
+        .trend-up { background-color: #dcfce7; color: #15803d; } /* Green */
+        .trend-down { background-color: #fee2e2; color: #b91c1c; } /* Red */
+        .trend-new { background-color: #dbeafe; color: #1e40af; } /* Blue */
+        .trend-neutral { background-color: #f1f5f9; color: #475569; } /* Gray (NEW) */
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>🏆 CNO Crazyhouse Weekly Report 🏆</h1>
-            <p class="timestamp">Powered By BayorMiller | Generated: June 15, 2025 at 12:56 PM</p>
+            <p class="timestamp">Powered By BayorMiller | Generated: June 15, 2025 at 02:23 PM</p>
         </header>
 
-        <!-- CATEGORY 1: THE ELITES (Your 'Top Dogs' & 'Most Lethal' combined) -->
+        <!-- CATEGORY 1: THE ELITES -->
         <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">🏆 Top Dogs (Overall Performance)</h2>
-            </div>
+            <div class="card-header"><h2 class="card-title">🏆 Top Dogs (Overall Performance)</h2></div>
             
-            <h3 class="card-description">Podium Power Rankings (Score: Gx3, Sx2, Bx1)</h3>
+            <h3 class="card-description">Podium Power Rankings (Top 10)</h3>
             <div class="table-wrapper">
                 <table>
                     <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Score</th><th class="number">🥇</th><th class="number">🥈</th><th class="number">🥉</th></tr></thead>
                     <tbody>
                     
-                    <tr><td class="number">1</td><td class="player-name">BayorMiller_CNO</td><td class="number"><b>22</b></td><td class="number">4</td><td class="number">4</td><td class="number">2</td></tr>
+                    <tr>
+                        <td class="number">
+                            1
+                            <span class="trend trend-up">▲5</span>
+                            
+                        </td>
+                        <td class="player-name">BayorMiller_CNO</td>
+                        <td class="number"><b>22</b></td><td class="number">4</td><td class="number">4</td><td class="number">2</td>
+                    </tr>
                     
-                    <tr><td class="number">2</td><td class="player-name">Anthonyoja</td><td class="number"><b>19</b></td><td class="number">5</td><td class="number">1</td><td class="number">2</td></tr>
+                    <tr>
+                        <td class="number">
+                            2
+                            <span class="trend trend-neutral">–</span>
+                        </td>
+                        <td class="player-name">Anthonyoja</td>
+                        <td class="number"><b>19</b></td><td class="number">5</td><td class="number">1</td><td class="number">2</td>
+                    </tr>
                     
-                    <tr><td class="number">3</td><td class="player-name">dabee</td><td class="number"><b>15</b></td><td class="number">2</td><td class="number">3</td><td class="number">3</td></tr>
+                    <tr>
+                        <td class="number">
+                            3
+                            <span class="trend trend-up">▲1</span>
+                            
+                        </td>
+                        <td class="player-name">dabee</td>
+                        <td class="number"><b>15</b></td><td class="number">2</td><td class="number">3</td><td class="number">3</td>
+                    </tr>
                     
-                    <tr><td class="number">4</td><td class="player-name">hardeywale</td><td class="number"><b>13</b></td><td class="number">2</td><td class="number">3</td><td class="number">1</td></tr>
+                    <tr>
+                        <td class="number">
+                            4
+                            <span class="trend trend-down">▼3</span>
+                            
+                        </td>
+                        <td class="player-name">hardeywale</td>
+                        <td class="number"><b>13</b></td><td class="number">2</td><td class="number">3</td><td class="number">1</td>
+                    </tr>
                     
-                    <tr><td class="number">5</td><td class="player-name">Warlock_Dabee</td><td class="number"><b>4</b></td><td class="number">1</td><td class="number">0</td><td class="number">1</td></tr>
+                    <tr>
+                        <td class="number">
+                            5
+                            <span class="trend trend-up">▲2</span>
+                            
+                        </td>
+                        <td class="player-name">Warlock_Dabee</td>
+                        <td class="number"><b>4</b></td><td class="number">1</td><td class="number">0</td><td class="number">1</td>
+                    </tr>
                     
-                    <tr><td class="number">6</td><td class="player-name">vegakov</td><td class="number"><b>4</b></td><td class="number">0</td><td class="number">1</td><td class="number">2</td></tr>
+                    <tr>
+                        <td class="number">
+                            6
+                            <span class="trend trend-down">▼1</span>
+                            
+                        </td>
+                        <td class="player-name">vegakov</td>
+                        <td class="number"><b>4</b></td><td class="number">0</td><td class="number">1</td><td class="number">2</td>
+                    </tr>
                     
-                    <tr><td class="number">7</td><td class="player-name">ovokodigood</td><td class="number"><b>3</b></td><td class="number">0</td><td class="number">1</td><td class="number">1</td></tr>
+                    <tr>
+                        <td class="number">
+                            7
+                            <span class="trend trend-new">NEW</span>
+                            
+                        </td>
+                        <td class="player-name">ovokodigood</td>
+                        <td class="number"><b>3</b></td><td class="number">0</td><td class="number">1</td><td class="number">1</td>
+                    </tr>
                     
-                    <tr><td class="number">8</td><td class="player-name">Zgm-GiantKiller</td><td class="number"><b>3</b></td><td class="number">0</td><td class="number">1</td><td class="number">1</td></tr>
+                    <tr>
+                        <td class="number">
+                            8
+                            <span class="trend trend-new">NEW</span>
+                            
+                        </td>
+                        <td class="player-name">Zgm-GiantKiller</td>
+                        <td class="number"><b>3</b></td><td class="number">0</td><td class="number">1</td><td class="number">1</td>
+                    </tr>
                     
-                    <tr><td class="number">9</td><td class="player-name">Ageless_2</td><td class="number"><b>1</b></td><td class="number">0</td><td class="number">0</td><td class="number">1</td></tr>
+                    <tr>
+                        <td class="number">
+                            9
+                            <span class="trend trend-down">▼6</span>
+                            
+                        </td>
+                        <td class="player-name">Ageless_2</td>
+                        <td class="number"><b>1</b></td><td class="number">0</td><td class="number">0</td><td class="number">1</td>
+                    </tr>
                     
                     </tbody>
                 </table>
@@ -136,62 +154,112 @@
             
 
             
-            <div class="card-header" style="margin-top: 2rem; margin-bottom: 0.5rem;">
-                <h2 class="card-title">Most Lethal (Precision)</h2>
-            </div>
-            <p class="card-description" style="margin-bottom: 1rem;">If you come across these guys then resignation is the best move. (avg point per game min: 20 games)</p>
+            <div class="card-header" style="margin-top: 2rem; margin-bottom: 0.5rem;"><h2 class="card-title">Most Lethal (Precision)</h2></div>
+            <p class="card-description" style="margin-bottom: 1rem;">If you come across these guys then resignation is the best move. (Top 10, min 20 games)</p>
             <div class="table-wrapper">
                 <table>
                     <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">PPG</th><th class="number">Total Points</th><th class="number">Total Games</th></tr></thead>
                     <tbody>
                     
-                    <tr><td class="number">1</td><td class="player-name">Zgm-GiantKiller</td><td class="number">2.33</td><td class="number">161</td><td class="number">69</td></tr>
+                    <tr>
+                        <td class="number">
+                            1
+                            <span class="trend trend-new">NEW</span>
+                            
+                        </td>
+                        <td class="player-name">Zgm-GiantKiller</td>
+                        <td class="number">2.33</td><td class="number">161</td><td class="number">69</td>
+                    </tr>
                     
-                    <tr><td class="number">2</td><td class="player-name">BayorMiller_CNO</td><td class="number">2.31</td><td class="number">475</td><td class="number">206</td></tr>
+                    <tr>
+                        <td class="number">
+                            2
+                            <span class="trend trend-up">▲4</span>
+                            
+                        </td>
+                        <td class="player-name">BayorMiller_CNO</td>
+                        <td class="number">2.31</td><td class="number">475</td><td class="number">206</td>
+                    </tr>
                     
-                    <tr><td class="number">3</td><td class="player-name">dabee</td><td class="number">2.30</td><td class="number">421</td><td class="number">183</td></tr>
+                    <tr>
+                        <td class="number">
+                            3
+                            <span class="trend trend-down">▼2</span>
+                            
+                        </td>
+                        <td class="player-name">dabee</td>
+                        <td class="number">2.30</td><td class="number">421</td><td class="number">183</td>
+                    </tr>
                     
-                    <tr><td class="number">4</td><td class="player-name">hardeywale</td><td class="number">2.08</td><td class="number">357</td><td class="number">172</td></tr>
+                    <tr>
+                        <td class="number">
+                            4
+                            <span class="trend trend-down">▼2</span>
+                            
+                        </td>
+                        <td class="player-name">hardeywale</td>
+                        <td class="number">2.08</td><td class="number">357</td><td class="number">172</td>
+                    </tr>
                     
-                    <tr><td class="number">5</td><td class="player-name">Anthonyoja</td><td class="number">2.02</td><td class="number">558</td><td class="number">276</td></tr>
+                    <tr>
+                        <td class="number">
+                            5
+                            <span class="trend trend-down">▼2</span>
+                            
+                        </td>
+                        <td class="player-name">Anthonyoja</td>
+                        <td class="number">2.02</td><td class="number">558</td><td class="number">276</td>
+                    </tr>
                     
-                    <tr><td class="number">6</td><td class="player-name">Warlock_Dabee</td><td class="number">1.94</td><td class="number">91</td><td class="number">47</td></tr>
+                    <tr>
+                        <td class="number">
+                            6
+                            <span class="trend trend-down">▼2</span>
+                            
+                        </td>
+                        <td class="player-name">Warlock_Dabee</td>
+                        <td class="number">1.94</td><td class="number">91</td><td class="number">47</td>
+                    </tr>
                     
-                    <tr><td class="number">7</td><td class="player-name">Ageless_2</td><td class="number">1.83</td><td class="number">188</td><td class="number">103</td></tr>
+                    <tr>
+                        <td class="number">
+                            7
+                            <span class="trend trend-down">▼2</span>
+                            
+                        </td>
+                        <td class="player-name">Ageless_2</td>
+                        <td class="number">1.83</td><td class="number">188</td><td class="number">103</td>
+                    </tr>
                     
-                    <tr><td class="number">8</td><td class="player-name">Crazybugg</td><td class="number">1.63</td><td class="number">62</td><td class="number">38</td></tr>
+                    <tr>
+                        <td class="number">
+                            8
+                            <span class="trend trend-new">NEW</span>
+                            
+                        </td>
+                        <td class="player-name">Crazybugg</td>
+                        <td class="number">1.63</td><td class="number">62</td><td class="number">38</td>
+                    </tr>
                     
-                    <tr><td class="number">9</td><td class="player-name">BB_thegame</td><td class="number">1.60</td><td class="number">230</td><td class="number">144</td></tr>
+                    <tr>
+                        <td class="number">
+                            9
+                            <span class="trend trend-down">▼1</span>
+                            
+                        </td>
+                        <td class="player-name">BB_thegame</td>
+                        <td class="number">1.60</td><td class="number">230</td><td class="number">144</td>
+                    </tr>
                     
-                    <tr><td class="number">10</td><td class="player-name">Mini_verse</td><td class="number">1.49</td><td class="number">82</td><td class="number">55</td></tr>
-                    
-                    <tr><td class="number">11</td><td class="player-name">vegakov</td><td class="number">1.45</td><td class="number">237</td><td class="number">164</td></tr>
-                    
-                    <tr><td class="number">12</td><td class="player-name">Noblechuks_CNO</td><td class="number">1.39</td><td class="number">93</td><td class="number">67</td></tr>
-                    
-                    <tr><td class="number">13</td><td class="player-name">ovokodigood</td><td class="number">1.38</td><td class="number">234</td><td class="number">169</td></tr>
-                    
-                    <tr><td class="number">14</td><td class="player-name">TommyBrooks</td><td class="number">1.28</td><td class="number">32</td><td class="number">25</td></tr>
-                    
-                    <tr><td class="number">15</td><td class="player-name">Ezengwori</td><td class="number">1.24</td><td class="number">138</td><td class="number">111</td></tr>
-                    
-                    <tr><td class="number">16</td><td class="player-name">Trappatoni</td><td class="number">1.21</td><td class="number">63</td><td class="number">52</td></tr>
-                    
-                    <tr><td class="number">17</td><td class="player-name">Eburu_sanmi</td><td class="number">1.04</td><td class="number">123</td><td class="number">118</td></tr>
-                    
-                    <tr><td class="number">18</td><td class="player-name">BabyDee</td><td class="number">0.82</td><td class="number">42</td><td class="number">51</td></tr>
-                    
-                    <tr><td class="number">19</td><td class="player-name">OvergiftedLight</td><td class="number">0.74</td><td class="number">99</td><td class="number">134</td></tr>
-                    
-                    <tr><td class="number">20</td><td class="player-name">Lexzero2</td><td class="number">0.61</td><td class="number">86</td><td class="number">140</td></tr>
-                    
-                    <tr><td class="number">21</td><td class="player-name">spicypearl8</td><td class="number">0.59</td><td class="number">88</td><td class="number">150</td></tr>
-                    
-                    <tr><td class="number">22</td><td class="player-name">philip178</td><td class="number">0.55</td><td class="number">21</td><td class="number">38</td></tr>
-                    
-                    <tr><td class="number">23</td><td class="player-name">A-king</td><td class="number">0.39</td><td class="number">16</td><td class="number">41</td></tr>
-                    
-                    <tr><td class="number">24</td><td class="player-name">genuine99</td><td class="number">0.21</td><td class="number">6</td><td class="number">29</td></tr>
+                    <tr>
+                        <td class="number">
+                            10
+                            <span class="trend trend-down">▼3</span>
+                            
+                        </td>
+                        <td class="player-name">Mini_verse</td>
+                        <td class="number">1.49</td><td class="number">82</td><td class="number">55</td>
+                    </tr>
                     
                     </tbody>
                 </table>
@@ -199,376 +267,198 @@
             
         </div>
 
-        <!-- CATEGORY 2: PLAYSTYLE & AGGRESSION (Your 'Agba Berserkers') -->
+        <!-- CATEGORY 2: PLAYSTYLE & AGGRESSION -->
         <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">🔥 Agba Berserkers</h2>
-                <p class="card-description">They don't care if you are Magnus, you go still collect berserk and get spanked.</p>
-            </div>
+            <div class="card-header"><h2 class="card-title">🔥 Agba Berserkers</h2>
+            <p class="card-description">They don't care if you are Magnus, you go still collect berserk and get spanked. (Top 10)</p></div>
             
             <div class="table-wrapper">
                 <table>
                     <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">BZ Freq.</th><th class="number">BZ Win %</th><th class="number">BZ Wins</th><th class="number">BZ Losses</th></tr></thead>
                     <tbody>
                     
-                    <tr><td class="number">1</td><td class="player-name">vegakov</td><td class="number">92.5%</td><td class="number">51.6%</td><td class="number">32</td><td class="number">30</td></tr>
-                    
-                    <tr><td class="number">2</td><td class="player-name">Anthonyoja</td><td class="number">77.7%</td><td class="number">64.8%</td><td class="number">79</td><td class="number">43</td></tr>
-                    
-                    <tr><td class="number">3</td><td class="player-name">BayorMiller_CNO</td><td class="number">77.3%</td><td class="number">68.2%</td><td class="number">107</td><td class="number">50</td></tr>
-                    
-                    <tr><td class="number">4</td><td class="player-name">ovokodigood</td><td class="number">68.8%</td><td class="number">40.9%</td><td class="number">9</td><td class="number">13</td></tr>
-                    
-                    <tr><td class="number">5</td><td class="player-name">Zgm-GiantKiller</td><td class="number">68.0%</td><td class="number">52.9%</td><td class="number">18</td><td class="number">16</td></tr>
-                    
-                    <tr><td class="number">6</td><td class="player-name">hardeywale</td><td class="number">64.1%</td><td class="number">68.0%</td><td class="number">51</td><td class="number">24</td></tr>
-                    
-                    <tr><td class="number">7</td><td class="player-name">dabee</td><td class="number">44.4%</td><td class="number">69.2%</td><td class="number">36</td><td class="number">16</td></tr>
-                    
-                    </tbody>
-                </table>
-            </div>
-            
-        </div>
-
-        <!-- CATEGORY 3: DEDICATION (Your 'Agba Loot Hunters') -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">🗿 Agba Loot Hunters (Dedication)</h2>
-                <p class="card-description">These guys no dey take eye see link with loot dem go raid am.</p>
-            </div>
-            
-            <div class="table-wrapper">
-                <table>
-                    <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Total Games Played</th></tr></thead>
-                    <tbody>
-                    
-                    <tr><td class="number">1</td><td class="player-name">Anthonyoja</td><td class="number">276</td></tr>
-                    
-                    <tr><td class="number">2</td><td class="player-name">BayorMiller_CNO</td><td class="number">206</td></tr>
-                    
-                    <tr><td class="number">3</td><td class="player-name">dabee</td><td class="number">183</td></tr>
-                    
-                    <tr><td class="number">4</td><td class="player-name">hardeywale</td><td class="number">172</td></tr>
-                    
-                    <tr><td class="number">5</td><td class="player-name">ovokodigood</td><td class="number">169</td></tr>
-                    
-                    <tr><td class="number">6</td><td class="player-name">vegakov</td><td class="number">164</td></tr>
-                    
-                    <tr><td class="number">7</td><td class="player-name">spicypearl8</td><td class="number">150</td></tr>
-                    
-                    <tr><td class="number">8</td><td class="player-name">BB_thegame</td><td class="number">144</td></tr>
-                    
-                    <tr><td class="number">9</td><td class="player-name">Lexzero2</td><td class="number">140</td></tr>
-                    
-                    <tr><td class="number">10</td><td class="player-name">OvergiftedLight</td><td class="number">134</td></tr>
-                    
-                    <tr><td class="number">11</td><td class="player-name">Eburu_sanmi</td><td class="number">118</td></tr>
-                    
-                    <tr><td class="number">12</td><td class="player-name">Ezengwori</td><td class="number">111</td></tr>
-                    
-                    <tr><td class="number">13</td><td class="player-name">Ageless_2</td><td class="number">103</td></tr>
-                    
-                    <tr><td class="number">14</td><td class="player-name">Zgm-GiantKiller</td><td class="number">69</td></tr>
-                    
-                    <tr><td class="number">15</td><td class="player-name">Noblechuks_CNO</td><td class="number">67</td></tr>
-                    
-                    <tr><td class="number">16</td><td class="player-name">Mini_verse</td><td class="number">55</td></tr>
-                    
-                    <tr><td class="number">17</td><td class="player-name">Trappatoni</td><td class="number">52</td></tr>
-                    
-                    <tr><td class="number">18</td><td class="player-name">BabyDee</td><td class="number">51</td></tr>
-                    
-                    <tr><td class="number">19</td><td class="player-name">Warlock_Dabee</td><td class="number">47</td></tr>
-                    
-                    <tr><td class="number">20</td><td class="player-name">A-king</td><td class="number">41</td></tr>
-                    
-                    <tr><td class="number">21</td><td class="player-name">philip178</td><td class="number">38</td></tr>
-                    
-                    <tr><td class="number">22</td><td class="player-name">Crazybugg</td><td class="number">38</td></tr>
-                    
-                    <tr><td class="number">23</td><td class="player-name">genuine99</td><td class="number">29</td></tr>
-                    
-                    <tr><td class="number">24</td><td class="player-name">TommyBrooks</td><td class="number">25</td></tr>
-                    
-                    <tr><td class="number">25</td><td class="player-name">Surjikal</td><td class="number">16</td></tr>
-                    
-                    <tr><td class="number">26</td><td class="player-name">kinghead</td><td class="number">16</td></tr>
-                    
-                    <tr><td class="number">27</td><td class="player-name">MrSipes</td><td class="number">9</td></tr>
-                    
-                    <tr><td class="number">28</td><td class="player-name">nevagivup</td><td class="number">9</td></tr>
-                    
-                    <tr><td class="number">29</td><td class="player-name">martins177</td><td class="number">8</td></tr>
-                    
-                    <tr><td class="number">30</td><td class="player-name">adeyemoabiola99</td><td class="number">6</td></tr>
-                    
-                    <tr><td class="number">31</td><td class="player-name">adet2510</td><td class="number">5</td></tr>
-                    
-                    <tr><td class="number">32</td><td class="player-name">b4elma</td><td class="number">3</td></tr>
-                    
-                    <tr><td class="number">33</td><td class="player-name">yorubademon</td><td class="number">2</td></tr>
-                    
-                    <tr><td class="number">34</td><td class="player-name">Dbosman</td><td class="number">2</td></tr>
-                    
-                    <tr><td class="number">35</td><td class="player-name">samueljohn</td><td class="number">2</td></tr>
-                    
-                    <tr><td class="number">36</td><td class="player-name">Jaevo</td><td class="number">1</td></tr>
-                    
-                    <tr><td class="number">37</td><td class="player-name">a2255ai</td><td class="number">1</td></tr>
-                    
-                    <tr><td class="number">38</td><td class="player-name">emmavictor038</td><td class="number">1</td></tr>
-                    
-                    <tr><td class="number">39</td><td class="player-name">twoinches</td><td class="number">1</td></tr>
-                    
-                    <tr><td class="number">40</td><td class="player-name">kuruvasulye</td><td class="number">1</td></tr>
-                    
-                    <tr><td class="number">41</td><td class="player-name">Goodmoves1155</td><td class="number">1</td></tr>
-                    
-                    <tr><td class="number">42</td><td class="player-name">ArtinSoltani2014</td><td class="number">0</td></tr>
-                    
-                    <tr><td class="number">43</td><td class="player-name">TGAinVaibhavGrand</td><td class="number">0</td></tr>
-                    
-                    <tr><td class="number">44</td><td class="player-name">Sam-Jossy</td><td class="number">0</td></tr>
-                    
-                    <tr><td class="number">45</td><td class="player-name">MusaKamalYunus</td><td class="number">0</td></tr>
-                    
-                    <tr><td class="number">46</td><td class="player-name">Iron_Woman</td><td class="number">0</td></tr>
-                    
-                    <tr><td class="number">47</td><td class="player-name">kirekachesschamp</td><td class="number">0</td></tr>
-                    
-                    <tr><td class="number">48</td><td class="player-name">ChessForFunRandom</td><td class="number">0</td></tr>
-                    
-                    <tr><td class="number">49</td><td class="player-name">Estatebeast</td><td class="number">0</td></tr>
-                    
-                    <tr><td class="number">50</td><td class="player-name">ayomoses</td><td class="number">0</td></tr>
-                    
-                    <tr><td class="number">51</td><td class="player-name">VVV7</td><td class="number">0</td></tr>
-                    
-                    </tbody>
-                </table>
-            </div>
-            
-        </div>
-
-        <!-- CATEGORY 4: WEEKLY MOVERS (NEW CATEGORY) -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">📈 Weekly Movers (Trends)</h2>
-                <p class="card-description">Who's hot and who's not? Biggest PPG change from last week.</p>
-            </div>
-             
-            <div class="table-wrapper">
-                <table>
-                    <thead><tr><th class="player-name">Player</th><th class="number">Current PPG</th><th class="number">Change</th></tr></thead>
-                    <tbody>
-                    
                     <tr>
-                        <td class="player-name">Crazybugg</td>
-                        <td class="number">1.63</td>
-                        <td class="number trend-up">
-                            ▲ 0.77
+                        <td class="number">
+                            1
+                            <span class="trend trend-up">▲5</span>
+                            
                         </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">BayorMiller_CNO</td>
-                        <td class="number">2.31</td>
-                        <td class="number trend-up">
-                            ▲ 0.45
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">BabyDee</td>
-                        <td class="number">0.82</td>
-                        <td class="number trend-up">
-                            ▲ 0.32
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">Eburu_sanmi</td>
-                        <td class="number">1.04</td>
-                        <td class="number trend-up">
-                            ▲ 0.24
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">adet2510</td>
-                        <td class="number">1.20</td>
-                        <td class="number trend-up">
-                            ▲ 0.20
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">spicypearl8</td>
-                        <td class="number">0.59</td>
-                        <td class="number trend-up">
-                            ▲ 0.16
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">BB_thegame</td>
-                        <td class="number">1.60</td>
-                        <td class="number trend-up">
-                            ▲ 0.10
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">Ezengwori</td>
-                        <td class="number">1.24</td>
-                        <td class="number trend-up">
-                            ▲ 0.10
-                        </td>
-                    </tr>
-                    
-                    <tr>
                         <td class="player-name">vegakov</td>
-                        <td class="number">1.45</td>
-                        <td class="number trend-up">
-                            ▲ 0.08
-                        </td>
+                        <td class="number">92.5%</td><td class="number">51.6%</td><td class="number">32</td><td class="number">30</td>
                     </tr>
                     
                     <tr>
-                        <td class="player-name">ovokodigood</td>
-                        <td class="number">1.38</td>
-                        <td class="number trend-up">
-                            ▲ 0.08
+                        <td class="number">
+                            2
+                            <span class="trend trend-up">▲2</span>
+                            
                         </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">OvergiftedLight</td>
-                        <td class="number">0.74</td>
-                        <td class="number trend-up">
-                            ▲ 0.04
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">Dbosman</td>
-                        <td class="number">0.00</td>
-                        <td class="number trend-down">
-                            ▼ 0.00
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">TommyBrooks</td>
-                        <td class="number">1.28</td>
-                        <td class="number trend-down">
-                            ▼ 0.01
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">Lexzero2</td>
-                        <td class="number">0.61</td>
-                        <td class="number trend-down">
-                            ▼ 0.01
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">Mini_verse</td>
-                        <td class="number">1.49</td>
-                        <td class="number trend-down">
-                            ▼ 0.03
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">A-king</td>
-                        <td class="number">0.39</td>
-                        <td class="number trend-down">
-                            ▼ 0.17
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">dabee</td>
-                        <td class="number">2.30</td>
-                        <td class="number trend-down">
-                            ▼ 0.17
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">genuine99</td>
-                        <td class="number">0.21</td>
-                        <td class="number trend-down">
-                            ▼ 0.17
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">Warlock_Dabee</td>
-                        <td class="number">1.94</td>
-                        <td class="number trend-down">
-                            ▼ 0.23
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="player-name">Ageless_2</td>
-                        <td class="number">1.83</td>
-                        <td class="number trend-down">
-                            ▼ 0.25
-                        </td>
-                    </tr>
-                    
-                    <tr>
                         <td class="player-name">Anthonyoja</td>
-                        <td class="number">2.02</td>
-                        <td class="number trend-down">
-                            ▼ 0.25
-                        </td>
+                        <td class="number">77.7%</td><td class="number">64.8%</td><td class="number">79</td><td class="number">43</td>
                     </tr>
                     
                     <tr>
-                        <td class="player-name">Trappatoni</td>
-                        <td class="number">1.21</td>
-                        <td class="number trend-down">
-                            ▼ 0.27
+                        <td class="number">
+                            3
+                            <span class="trend trend-neutral">–</span>
                         </td>
+                        <td class="player-name">BayorMiller_CNO</td>
+                        <td class="number">77.3%</td><td class="number">68.2%</td><td class="number">107</td><td class="number">50</td>
                     </tr>
                     
                     <tr>
+                        <td class="number">
+                            4
+                            <span class="trend trend-new">NEW</span>
+                            
+                        </td>
+                        <td class="player-name">ovokodigood</td>
+                        <td class="number">68.8%</td><td class="number">40.9%</td><td class="number">9</td><td class="number">13</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="number">
+                            5
+                            <span class="trend trend-new">NEW</span>
+                            
+                        </td>
+                        <td class="player-name">Zgm-GiantKiller</td>
+                        <td class="number">68.0%</td><td class="number">52.9%</td><td class="number">18</td><td class="number">16</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="number">
+                            6
+                            <span class="trend trend-down">▼4</span>
+                            
+                        </td>
                         <td class="player-name">hardeywale</td>
-                        <td class="number">2.08</td>
-                        <td class="number trend-down">
-                            ▼ 0.35
-                        </td>
+                        <td class="number">64.1%</td><td class="number">68.0%</td><td class="number">51</td><td class="number">24</td>
                     </tr>
                     
                     <tr>
-                        <td class="player-name">b4elma</td>
-                        <td class="number">0.00</td>
-                        <td class="number trend-down">
-                            ▼ 0.53
+                        <td class="number">
+                            7
+                            <span class="trend trend-down">▼2</span>
+                            
                         </td>
+                        <td class="player-name">dabee</td>
+                        <td class="number">44.4%</td><td class="number">69.2%</td><td class="number">36</td><td class="number">16</td>
+                    </tr>
+                    
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+
+        <!-- CATEGORY 3: DEDICATION -->
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">🗿 Agba Loot Hunters (Dedication)</h2>
+            <p class="card-description">These guys no dey take eye see link with loot dem go raid am. (Top 10)</p></div>
+            
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Total Games</th></tr></thead>
+                    <tbody>
+                    
+                    <tr>
+                        <td class="number">
+                            1
+                            <span class="trend trend-neutral">–</span>
+                        </td>
+                        <td class="player-name">Anthonyoja</td>
+                        <td class="number">276</td>
                     </tr>
                     
                     <tr>
-                        <td class="player-name">Jaevo</td>
-                        <td class="number">0.00</td>
-                        <td class="number trend-down">
-                            ▼ 0.75
+                        <td class="number">
+                            2
+                            <span class="trend trend-up">▲8</span>
+                            
                         </td>
+                        <td class="player-name">BayorMiller_CNO</td>
+                        <td class="number">206</td>
                     </tr>
                     
                     <tr>
-                        <td class="player-name">nevagivup</td>
-                        <td class="number">0.67</td>
-                        <td class="number trend-down">
-                            ▼ 1.17
+                        <td class="number">
+                            3
+                            <span class="trend trend-up">▲12</span>
+                            
                         </td>
+                        <td class="player-name">dabee</td>
+                        <td class="number">183</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="number">
+                            4
+                            <span class="trend trend-down">▼2</span>
+                            
+                        </td>
+                        <td class="player-name">hardeywale</td>
+                        <td class="number">172</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="number">
+                            5
+                            <span class="trend trend-up">▲3</span>
+                            
+                        </td>
+                        <td class="player-name">ovokodigood</td>
+                        <td class="number">169</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="number">
+                            6
+                            <span class="trend trend-down">▼3</span>
+                            
+                        </td>
+                        <td class="player-name">vegakov</td>
+                        <td class="number">164</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="number">
+                            7
+                            <span class="trend trend-up">▲10</span>
+                            
+                        </td>
+                        <td class="player-name">spicypearl8</td>
+                        <td class="number">150</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="number">
+                            8
+                            <span class="trend trend-down">▼3</span>
+                            
+                        </td>
+                        <td class="player-name">BB_thegame</td>
+                        <td class="number">144</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="number">
+                            9
+                            <span class="trend trend-down">▼5</span>
+                            
+                        </td>
+                        <td class="player-name">Lexzero2</td>
+                        <td class="number">140</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="number">
+                            10
+                            <span class="trend trend-up">▲3</span>
+                            
+                        </td>
+                        <td class="player-name">OvergiftedLight</td>
+                        <td class="number">134</td>
                     </tr>
                     
                     </tbody>
@@ -577,9 +467,7 @@
             
         </div>
         
-        <div class="footer">
-            BayorMiller Arena Series. CNO Stats Engine.
-        </div>
+        <div class="footer">BayorMiller Arena Series. CNO Stats Engine V2.</div>
     </div>
 </body>
 </html>
