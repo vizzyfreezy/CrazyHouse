@@ -1,0 +1,52 @@
+{
+    "dabee": {
+        "berserk_games": 25,
+        "berserk_wins": 17,
+        "total_games_in_podium_summary": 37
+    },
+    "vegakov": {
+        "berserk_games": 67,
+        "berserk_wins": 35,
+        "total_games_in_podium_summary": 132
+    },
+    "hardeywale": {
+        "berserk_games": 119,
+        "berserk_wins": 83,
+        "total_games_in_podium_summary": 152
+    },
+    "BayorMiller_CNO": {
+        "berserk_games": 21,
+        "berserk_wins": 15,
+        "total_games_in_podium_summary": 29
+    },
+    "Warlock_Dabee": {
+        "berserk_games": 3,
+        "berserk_wins": 3,
+        "total_games_in_podium_summary": 42
+    },
+    "Anthonyoja": {
+        "berserk_games": 129,
+        "berserk_wins": 80,
+        "total_games_in_podium_summary": 180
+    },
+    "Ageless_2": {
+        "berserk_games": 43,
+        "berserk_wins": 27,
+        "total_games_in_podium_summary": 48
+    },
+    "ManFromSpain": {
+        "berserk_games": 4,
+        "berserk_wins": 4,
+        "total_games_in_podium_summary": 11
+    },
+    "Mini_verse": {
+        "berserk_games": 5,
+        "berserk_wins": 1,
+        "total_games_in_podium_summary": 9
+    },
+    "Trappatoni": {
+        "berserk_games": 1,
+        "berserk_wins": 1,
+        "total_games_in_podium_summary": 13
+    }
+}

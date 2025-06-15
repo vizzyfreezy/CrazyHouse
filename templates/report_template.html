@@ -1,0 +1,198 @@
+<!-- templates/report_template.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 {{ report_title }} 🏆</title>
+    <style>
+        body { 
+            font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif; 
+            margin: 0; 
+            padding: 10px; 
+            background-color: #f0f2f5; 
+            color: #333; 
+            line-height: 1.4; 
+            font-size: 13px; 
+        }
+        .container { 
+            max-width: 900px;
+            margin: auto; 
+            background-color: #fff; 
+            padding: 15px; 
+            border-radius: 6px; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.05); 
+        }
+        h1 { 
+            color: #5D3FD3; 
+            border-bottom: 1px solid #e0e0e0; 
+            padding-bottom: 5px; 
+            margin-top: 15px; 
+            margin-bottom: 15px;
+            text-align: center; 
+            font-size: 1.8em; 
+        }
+        h2 { 
+            color: #5D3FD3; 
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 4px;
+            margin-top: 20px; 
+            margin-bottom: 10px; 
+            font-size: 1.3em; 
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 20px;
+        }
+        th, td { 
+            border: 1px solid #e8e8e8; 
+            padding: 4px 6px;
+            text-align: left; 
+            overflow-wrap: break-word;
+            vertical-align: middle; 
+        }
+        th { 
+            background-color: #7E57C2; 
+            color: white; 
+            font-weight: bold; 
+            white-space: normal; 
+            font-size: 0.95em;
+        }
+        td {
+             font-size: 0.9em; 
+        }
+        td.player-name { 
+
+        }
+        td.number, th.number,
+        td.percentage, th.percentage {
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        tr:nth-child(even) { background-color: #fdfdfd; } /* Very light alternating */
+
+        .timestamp { text-align: center; margin-bottom: 15px; font-style: italic; color: #777; font-size: 0.85em;}
+        .footer { text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; font-size: 0.8em; color: #888; }
+        .table-wrapper { overflow-x: auto; } 
+        .table-description { font-size: 0.85em; color: #555; margin-top: -8px; margin-bottom: 8px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 {{ report_title }} 🏆</h1>
+        <h2 class="timestamp"> Powered By BayorMiller </h2>
+     
+ 
+        {% if medal_data %}
+        <h2>Top Dogs Table</h2>
+        <p class="table-description">Current Medal Count</p>
+        <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th class="number">Rank</th>
+                    <th class="player-name">Player</th>
+                    <th class="number">🥇</th>
+                    <th class="number">🥈</th>
+                    <th class="number">🥉</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in medal_data %}
+            <tr>
+                <td class="number">{{ loop.index }}</td>
+                <td class="player-name">{{ item.player }}</td>
+                <td class="number">{{ item.gold }}</td>
+                <td class="number">{{ item.silver }}</td>
+                <td class="number">{{ item.bronze }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% endif %}
+
+        {% if points_data %}
+        <h2>MEN DEM <small>(Top {{ points_top_n }})</small></h2>
+        <div class="table-wrapper">
+        <table>
+            <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Total<br>Points</th></tr></thead>
+            <tbody>
+            {% for item in points_data %}
+            <tr><td class="number">{{ loop.index }}</td><td class="player-name">{{ item.player }}</td><td class="number">{{ item.points }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% endif %}
+
+        {% if berserk_wr_data %}
+        <h2>Berserk: Win Rate <small>(Top {{ berserk_top_n }})</small></h2>
+        <p class="table-description">Percentage of berserked games that was won (minimum of  {{ berserk_min_games }} berseked games)</p>
+        <div class="table-wrapper">
+        <table>
+            <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="percentage">Win<br>Rate</th><th class="number">BZ<br>Games</th></tr></thead>
+            <tbody>
+            {% for item in berserk_wr_data %}
+            <tr><td class="number">{{ loop.index }}</td><td class="player-name">{{ item.name }}</td><td class="percentage">{{ "%.1f%%"|format(item.win_rate * 100) }}</td><td class="number">{{ item.berserk_games }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% endif %}
+        
+        {% if berserk_freq_data %}
+        <h2>Agba Berserkers</h2>
+        <p class="table-description"> They don't care if you are Magnus, you go still collect berserk and get spanked</p>
+        <div class="table-wrapper">
+        <table>
+            <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="percentage">BZ<br>Freq.</th><th class="number">BZ<br>Games</th><th class="number">Total<br>Games<br>(Podium)</th></tr></thead>
+            <tbody>
+            {% for item in berserk_freq_data %}
+            <tr><td class="number">{{ loop.index }}</td><td class="player-name">{{ item.name }}</td><td class="percentage">{{ "%.1f%%"|format(item.berserk_freq * 100) }}</td><td class="number">{{ item.berserk_games }}</td><td class="number">{{ item.total_games_podium }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% endif %}
+
+        {% if ppg_data %}
+        <h2>Most Lethal (Precision)</h2>
+        <p class="table-description">If you come across these guys then resignation is the best move. (avg point per game min: {{ppg_min_total_games}} games)</p>
+        <div class="table-wrapper">
+        <table>
+            <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">PPG</th><th class="number">Total<br>Points</th><th class="number">Total<br>Games</th></tr></thead>
+            <tbody>
+            {% for item in ppg_data %}
+            <tr><td class="number">{{ loop.index }}</td><td class="player-name">{{ item.name }}</td><td class="number">{{ "%.2f"|format(item.ppg) }}</td><td class="number">{{ item.total_score }}</td><td class="number">{{ item.total_games }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% endif %}
+
+        {% if active_tournaments_data %}
+        <h2>Agba Loot Hunters (Dedication)</h2>
+        <p class="table-description">These guys no dey take eye see link with loot dem go raid am.</p>
+        
+        <div class="table-wrapper">
+        <table>
+            <thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Active<br>Events</th></tr></thead>
+            <tbody>
+            {% for item in active_tournaments_data %}
+            <tr><td class="number">{{ loop.index }}</td><td class="player-name">{{ item.player }}</td><td class="number">{{ item.count }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% endif %}
+        
+        <div class="footer">
+            {{ username }} Arena Series. CNO Stats Engine.
+        </div>
+    </div>
+</body>
+</html>
