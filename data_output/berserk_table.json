@@ -1,52 +1,47 @@
 {
-    "dabee": {
-        "berserk_games": 25,
-        "berserk_wins": 17,
-        "total_games_in_podium_summary": 37
-    },
-    "vegakov": {
-        "berserk_games": 67,
-        "berserk_wins": 35,
-        "total_games_in_podium_summary": 132
+    "Anthonyoja": {
+        "berserk_games": 122,
+        "berserk_wins": 79,
+        "total_games_in_podium_summary": 157
     },
     "hardeywale": {
-        "berserk_games": 119,
-        "berserk_wins": 83,
-        "total_games_in_podium_summary": 152
+        "berserk_games": 75,
+        "berserk_wins": 51,
+        "total_games_in_podium_summary": 117
     },
     "BayorMiller_CNO": {
-        "berserk_games": 21,
-        "berserk_wins": 15,
-        "total_games_in_podium_summary": 29
-    },
-    "Warlock_Dabee": {
-        "berserk_games": 3,
-        "berserk_wins": 3,
-        "total_games_in_podium_summary": 42
-    },
-    "Anthonyoja": {
-        "berserk_games": 129,
-        "berserk_wins": 80,
-        "total_games_in_podium_summary": 180
+        "berserk_games": 157,
+        "berserk_wins": 107,
+        "total_games_in_podium_summary": 203
     },
     "Ageless_2": {
-        "berserk_games": 43,
-        "berserk_wins": 27,
-        "total_games_in_podium_summary": 48
-    },
-    "ManFromSpain": {
-        "berserk_games": 4,
-        "berserk_wins": 4,
-        "total_games_in_podium_summary": 11
-    },
-    "Mini_verse": {
-        "berserk_games": 5,
+        "berserk_games": 3,
         "berserk_wins": 1,
-        "total_games_in_podium_summary": 9
+        "total_games_in_podium_summary": 17
     },
-    "Trappatoni": {
-        "berserk_games": 1,
+    "dabee": {
+        "berserk_games": 52,
+        "berserk_wins": 36,
+        "total_games_in_podium_summary": 117
+    },
+    "vegakov": {
+        "berserk_games": 62,
+        "berserk_wins": 32,
+        "total_games_in_podium_summary": 67
+    },
+    "ovokodigood": {
+        "berserk_games": 22,
+        "berserk_wins": 9,
+        "total_games_in_podium_summary": 32
+    },
+    "Zgm-GiantKiller": {
+        "berserk_games": 34,
+        "berserk_wins": 18,
+        "total_games_in_podium_summary": 50
+    },
+    "Warlock_Dabee": {
+        "berserk_games": 2,
         "berserk_wins": 1,
-        "total_games_in_podium_summary": 13
+        "total_games_in_podium_summary": 46
     }
 }
