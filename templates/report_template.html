@@ -19,7 +19,7 @@
         .card-header { padding: 1rem 1.25rem; background: var(--theme-gradient); color: white; }
         .card-title { font-size: 1.1rem; font-weight: 700; margin: 0; }
         .card-description { font-size: 0.8rem; font-weight: 400; margin: 0.5rem 0 0 0; padding-left: 0.75rem; border-left: 2px solid rgba(255, 255, 255, 0.5); opacity: 0.9; }
-        .card-body { padding: 0.5rem 1.25rem 0.8rem 1.25rem; }
+        .card-body { padding: 0.8rem 1.25rem; }
         .table-wrapper { overflow-x: auto; } .table-wrapper::-webkit-scrollbar { height: 6px; } .table-wrapper::-webkit-scrollbar-track { background: #f1f5f9; } .table-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; }
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
         th, td { padding: 0.5rem 0.4rem; text-align: left; border-bottom: 1px solid #f3f4f6; white-space: nowrap; }
@@ -31,39 +31,88 @@
         .trend { display: inline-block; font-size: 0.7em; font-weight: 700; margin-left: 0.25rem; vertical-align: 0.2em; padding: 0.1em 0.3em; border-radius: 0.25rem; line-height: 1; width: 2em; text-align: center; }
         .trend-up { background-color: #dcfce7; color: #15803d; } .trend-down { background-color: #fee2e2; color: #b91c1c; } .trend-new { background-color: #dbeafe; color: #1e40af; } .trend-neutral { background-color: #f3f4f6; color: #4b5563; }
         .gold { color: #f59e0b; } .silver { color: #71717a; } .bronze { color: #a16207; }
-        .feat-box { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .feat-item { background: #f9fafb; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; text-align: center; }
-        .feat-title { font-size: 0.8rem; font-weight: 600; color: #4b5563; margin: 0 0 0.5rem 0; }
-        .feat-highlight { font-size: 1.1rem; font-weight: 700; color: var(--theme-color); }
-        .feat-context { font-size: 0.75rem; color: #6b7280; } .feat-context b { color: #374151; }
+        
+        .feat-box { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: stretch; }
+        .feat-item { 
+            background: #f9fafb; padding: 1rem 0.75rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; 
+            display: flex; flex-direction: column; text-align: center;
+        }
+        .feat-title { font-size: 0.85rem; font-weight: 600; color: #4b5563; margin: 0; padding-bottom: 0.5rem; }
+        .feat-content-wrapper {
+            flex-grow: 1; display: flex; flex-direction: column; justify-content: center;
+        }
+        .feat-highlight {
+            display: flex; justify-content: center; align-items: baseline; gap: 0.4rem;
+            color: var(--theme-color); font-weight: 700; line-height: 1; margin: 0.25rem 0;
+        }
+        .feat-highlight .number { font-size: 1.8rem; }
+        .feat-highlight .label { font-size: 1.1rem; font-weight: 600; }
+        .feat-context { font-size: 0.8rem; color: #6b7280; line-height: 1.3; margin-top: 0.25rem; } 
+        .feat-context b { color: #374151; font-weight: 600; }
+        .player-rating { font-size: 0.7rem; font-weight: 400; color: #6b7280; }
+
+        /* --- THE RESPONSIVE FIX --- */
+        @media (max-width: 640px) {
+            .feat-box {
+                grid-template-columns: 1fr; /* On narrow screens, stack to a single column */
+            }
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <header class="page-header"><h1 class="page-title">CNO Crazyhouse</h1><p class="page-subtitle">Weekly Stats Report</p><p class="timestamp">Powered By BayorMiller | Generated: {{ generation_date }}</p></header>
-        <div class="stats-key"><b>Pts:</b> Total Points<span>•</span><b>GP:</b> Games Played<span>•</span><b>PPG:</b> Points Per Game<span>•</span><b>BZ%:</b> Berserk Freq<span>•</span><b>Win%:</b> BZ Win Rate</div>
+        <div class="stats-key"><b>Pts:</b> Total Points<span>•</span><b>GP:</b> Games Played<span>•</span><b>PPG:</b> Points Per Game<span>•</span><b>BZ%:</b> Berserk Freq<span>•</span><b>Win%:</b> BZ Win Rate<span>•</span><b>RD:</b> Rating Deviation</div>
 
         <div class="card">
-            <div class="card-header"><h2 class="card-title">👑 CNO Power Rankings</h2><p class="card-description">The ultimate ranking based on head-to-head performance.</p></div>
-            <div class="card-body"><div class="table-wrapper"><table><thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Power Score</th></tr></thead>
+            <div class="card-header"><h2 class="card-title">👑 CNO Power Rankings</h2><p class="card-description">The ultimate skill rating for active players (RD < 110).</p></div>
+            <div class="card-body"><div class="table-wrapper"><table><thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Rating</th><th class="number">+/- RD</th></tr></thead>
                         <tbody>
-                        {% for item in power_rankings %}
+                        {% for item in glicko_rankings %}
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">{{ loop.index }}</td>
-                            <td class="player-name">{{ item.player }}</td><td class="number">{{ "%.0f"|format(item.score) }}</td>
+                            <td class="player-name">{{ item.player }}</td>
+                            <td class="number"><b>{{ "%.0f"|format(item.rating) }}</b></td>
+                            <td class="number">{{ "%.0f"|format(item.rd) }}</td>
                         </tr>
                         {% endfor %}</tbody></table></div></div></div>
 
         <div class="card">
             <div class="card-header"><h2 class="card-title">⭐ Community Champions</h2><p class="card-description">Celebrating memorable moments from across the community.</p></div>
-            <div class="card-body"><div class="feat-box">
-                    <div class="feat-item"><h3 class="feat-title">Giant Killer</h3>
-                        {% if inclusive_stats.giant_killer %}<p class="feat-highlight">+{{ inclusive_stats.giant_killer.loser_rating - inclusive_stats.giant_killer.winner_rating }} Rating Upset!</p><p class="feat-context"><b>{{ inclusive_stats.giant_killer.winner_name }}</b> ({{ inclusive_stats.giant_killer.winner_rating }})<br>defeated<br><b>{{ inclusive_stats.giant_killer.loser_name }}</b> ({{ inclusive_stats.giant_killer.loser_rating }})</p>
-                        {% else %}<p class="feat-context">No major upsets this week.</p>{% endif %}</div>
-                    <div class="feat-item"><h3 class="feat-title">Marathon Man</h3>
-                         {% if inclusive_stats.marathon_man %}<p class="feat-highlight">{{ inclusive_stats.marathon_man.moves }} Moves</p><p class="feat-context">An epic battle between<br><b>{{ inclusive_stats.marathon_man.winner_name }}</b> & <b>{{ inclusive_stats.marathon_man.loser_name }}</b></p>
-                        {% else %}<p class="feat-context">No games played this week.</p>{% endif %}</div></div></div></div>
+            <div class="card-body">
+                <div class="feat-box">
+                    <div class="feat-item">
+                        <h3 class="feat-title">Giant Killer</h3>
+                        <div class="feat-content-wrapper">
+                            {% if inclusive_stats.giant_killer %}
+                                <div class="feat-highlight">
+                                    <span class="number">+{{ inclusive_stats.giant_killer.loser_rating - inclusive_stats.giant_killer.winner_rating }}</span>
+                                    <span class="label">Rating Upset!</span>
+                                </div>
+                                <p class="feat-context">
+                                    <b>{{ inclusive_stats.giant_killer.winner_name }}</b> <span class="player-rating">({{ inclusive_stats.giant_killer.winner_rating }})</span> vs <b>{{ inclusive_stats.giant_killer.loser_name }}</b> <span class="player-rating">({{ inclusive_stats.giant_killer.loser_rating }})</span>
+                                </p>
+                            {% else %}<p class="feat-context">No major upsets this week.</p>{% endif %}
+                        </div>
+                    </div>
+                    <div class="feat-item">
+                        <h3 class="feat-title">Marathon Man</h3>
+                        <div class="feat-content-wrapper">
+                             {% if inclusive_stats.marathon_man %}
+                                <div class="feat-highlight">
+                                    <span class="number">{{ inclusive_stats.marathon_man.moves }}</span>
+                                    <span class="label">Moves</span>
+                                </div>
+                                <p class="feat-context">
+                                    <b>{{ inclusive_stats.marathon_man.winner_name }}</b> Vs <b>{{ inclusive_stats.marathon_man.loser_name }}</b>
+                                </p>
+                            {% else %}<p class="feat-context">No games played this week.</p>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="card">
             <div class="card-header"><h2 class="card-title">🏆 Top Dogs (MENDEM)</h2><p class="card-description">Podium Power Rankings (Top {{ table_limits.medals }})</p></div>
@@ -109,7 +158,7 @@
                         </tr>
                         {% endfor %}</tbody></table></div></div></div>
         
-        <div class="footer">{{ username }} Arena Series. CNO Stats Engine V12.</div>
+        <div class="footer">{{ username }} Arena Series. CNO Stats Engine V18.</div>
     </div>
 </body>
 </html>

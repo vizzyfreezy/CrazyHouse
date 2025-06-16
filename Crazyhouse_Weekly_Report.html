@@ -19,7 +19,7 @@
         .card-header { padding: 1rem 1.25rem; background: var(--theme-gradient); color: white; }
         .card-title { font-size: 1.1rem; font-weight: 700; margin: 0; }
         .card-description { font-size: 0.8rem; font-weight: 400; margin: 0.5rem 0 0 0; padding-left: 0.75rem; border-left: 2px solid rgba(255, 255, 255, 0.5); opacity: 0.9; }
-        .card-body { padding: 0.5rem 1.25rem 0.8rem 1.25rem; }
+        .card-body { padding: 0.8rem 1.25rem; }
         .table-wrapper { overflow-x: auto; } .table-wrapper::-webkit-scrollbar { height: 6px; } .table-wrapper::-webkit-scrollbar-track { background: #f1f5f9; } .table-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; }
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
         th, td { padding: 0.5rem 0.4rem; text-align: left; border-bottom: 1px solid #f3f4f6; white-space: nowrap; }
@@ -31,123 +31,221 @@
         .trend { display: inline-block; font-size: 0.7em; font-weight: 700; margin-left: 0.25rem; vertical-align: 0.2em; padding: 0.1em 0.3em; border-radius: 0.25rem; line-height: 1; width: 2em; text-align: center; }
         .trend-up { background-color: #dcfce7; color: #15803d; } .trend-down { background-color: #fee2e2; color: #b91c1c; } .trend-new { background-color: #dbeafe; color: #1e40af; } .trend-neutral { background-color: #f3f4f6; color: #4b5563; }
         .gold { color: #f59e0b; } .silver { color: #71717a; } .bronze { color: #a16207; }
-        .feat-box { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .feat-item { background: #f9fafb; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; text-align: center; }
-        .feat-title { font-size: 0.8rem; font-weight: 600; color: #4b5563; margin: 0 0 0.5rem 0; }
-        .feat-highlight { font-size: 1.1rem; font-weight: 700; color: var(--theme-color); }
-        .feat-context { font-size: 0.75rem; color: #6b7280; } .feat-context b { color: #374151; }
+        
+        .feat-box { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: stretch; }
+        .feat-item { 
+            background: #f9fafb; padding: 1rem 0.75rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; 
+            display: flex; flex-direction: column; text-align: center;
+        }
+        .feat-title { font-size: 0.85rem; font-weight: 600; color: #4b5563; margin: 0; padding-bottom: 0.5rem; }
+        .feat-content-wrapper {
+            flex-grow: 1; display: flex; flex-direction: column; justify-content: center;
+        }
+        .feat-highlight {
+            display: flex; justify-content: center; align-items: baseline; gap: 0.4rem;
+            color: var(--theme-color); font-weight: 700; line-height: 1; margin: 0.25rem 0;
+        }
+        .feat-highlight .number { font-size: 1.8rem; }
+        .feat-highlight .label { font-size: 1.1rem; font-weight: 600; }
+        .feat-context { font-size: 0.8rem; color: #6b7280; line-height: 1.3; margin-top: 0.25rem; } 
+        .feat-context b { color: #374151; font-weight: 600; }
+        .player-rating { font-size: 0.7rem; font-weight: 400; color: #6b7280; }
+
+        /* --- THE RESPONSIVE FIX --- */
+        @media (max-width: 640px) {
+            .feat-box {
+                grid-template-columns: 1fr; /* On narrow screens, stack to a single column */
+            }
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <header class="page-header"><h1 class="page-title">CNO Crazyhouse</h1><p class="page-subtitle">Weekly Stats Report</p><p class="timestamp">Powered By BayorMiller | Generated: June 15, 2025 at 09:38 PM</p></header>
-        <div class="stats-key"><b>Pts:</b> Total Points<span>•</span><b>GP:</b> Games Played<span>•</span><b>PPG:</b> Points Per Game<span>•</span><b>BZ%:</b> Berserk Freq<span>•</span><b>Win%:</b> BZ Win Rate</div>
+        <header class="page-header"><h1 class="page-title">CNO Crazyhouse</h1><p class="page-subtitle">Weekly Stats Report</p><p class="timestamp">Powered By BayorMiller | Generated: June 16, 2025 at 03:17 AM</p></header>
+        <div class="stats-key"><b>Pts:</b> Total Points<span>•</span><b>GP:</b> Games Played<span>•</span><b>PPG:</b> Points Per Game<span>•</span><b>BZ%:</b> Berserk Freq<span>•</span><b>Win%:</b> BZ Win Rate<span>•</span><b>RD:</b> Rating Deviation</div>
 
         <div class="card">
-            <div class="card-header"><h2 class="card-title">👑 CNO Power Rankings</h2><p class="card-description">The ultimate ranking based on head-to-head performance.</p></div>
-            <div class="card-body"><div class="table-wrapper"><table><thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Power Score</th></tr></thead>
+            <div class="card-header"><h2 class="card-title">👑 CNO Power Rankings</h2><p class="card-description">The ultimate skill rating for active players (RD < 110).</p></div>
+            <div class="card-body"><div class="table-wrapper"><table><thead><tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Rating</th><th class="number">+/- RD</th></tr></thead>
                         <tbody>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">1</td>
-                            <td class="player-name">Anthonyoja</td><td class="number">24011526033390153728</td>
+                            <td class="player-name">dabee</td>
+                            <td class="number"><b>1731</b></td>
+                            <td class="number">38</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">2</td>
-                            <td class="player-name">ovokodigood</td><td class="number">989558496007914752</td>
+                            <td class="player-name">Warlock_Dabee</td>
+                            <td class="number"><b>1672</b></td>
+                            <td class="number">75</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">3</td>
-                            <td class="player-name">OvergiftedLight</td><td class="number">553249260411423168</td>
+                            <td class="player-name">Zgm-GiantKiller</td>
+                            <td class="number"><b>1668</b></td>
+                            <td class="number">62</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">4</td>
-                            <td class="player-name">BabyDee</td><td class="number">147528587140491872</td>
+                            <td class="player-name">BayorMiller_CNO</td>
+                            <td class="number"><b>1653</b></td>
+                            <td class="number">36</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">5</td>
-                            <td class="player-name">vegakov</td><td class="number">132920998160995312</td>
+                            <td class="player-name">hardeywale</td>
+                            <td class="number"><b>1649</b></td>
+                            <td class="number">39</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">6</td>
-                            <td class="player-name">TommyBrooks</td><td class="number">58228672317719520</td>
+                            <td class="player-name">BB_thegame</td>
+                            <td class="number"><b>1607</b></td>
+                            <td class="number">43</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">7</td>
-                            <td class="player-name">Ezengwori</td><td class="number">44620852556178600</td>
+                            <td class="player-name">Anthonyoja</td>
+                            <td class="number"><b>1605</b></td>
+                            <td class="number">31</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">8</td>
-                            <td class="player-name">kuruvasulye</td><td class="number">39853716872313496</td>
+                            <td class="player-name">Ageless_2</td>
+                            <td class="number"><b>1554</b></td>
+                            <td class="number">51</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">9</td>
-                            <td class="player-name">A-king</td><td class="number">25053371208785736</td>
+                            <td class="player-name">Trappatoni</td>
+                            <td class="number"><b>1519</b></td>
+                            <td class="number">71</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">10</td>
-                            <td class="player-name">genuine99</td><td class="number">22680929613893588</td>
+                            <td class="player-name">vegakov</td>
+                            <td class="number"><b>1478</b></td>
+                            <td class="number">40</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">11</td>
-                            <td class="player-name">nevagivup</td><td class="number">19163394462265764</td>
+                            <td class="player-name">Noblechuks_CNO</td>
+                            <td class="number"><b>1477</b></td>
+                            <td class="number">62</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">12</td>
-                            <td class="player-name">martins177</td><td class="number">17373408687143994</td>
+                            <td class="player-name">Mini_verse</td>
+                            <td class="number"><b>1473</b></td>
+                            <td class="number">69</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">13</td>
-                            <td class="player-name">Surjikal</td><td class="number">16903265199888056</td>
+                            <td class="player-name">Ezengwori</td>
+                            <td class="number"><b>1468</b></td>
+                            <td class="number">49</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">14</td>
-                            <td class="player-name">kinghead</td><td class="number">537304669287096</td>
+                            <td class="player-name">Eburu_sanmi</td>
+                            <td class="number"><b>1465</b></td>
+                            <td class="number">47</td>
                         </tr>
                         
                         <tr>
-                            <!-- TREND REMOVED FROM THIS TABLE AS INSTRUCTED -->
                             <td class="number">15</td>
-                            <td class="player-name">adeyemoabiola99</td><td class="number">-0</td>
+                            <td class="player-name">ovokodigood</td>
+                            <td class="number"><b>1457</b></td>
+                            <td class="number">40</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="number">16</td>
+                            <td class="player-name">BabyDee</td>
+                            <td class="number"><b>1373</b></td>
+                            <td class="number">71</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="number">17</td>
+                            <td class="player-name">OvergiftedLight</td>
+                            <td class="number"><b>1343</b></td>
+                            <td class="number">45</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="number">18</td>
+                            <td class="player-name">Lexzero2</td>
+                            <td class="number"><b>1288</b></td>
+                            <td class="number">44</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="number">19</td>
+                            <td class="player-name">spicypearl8</td>
+                            <td class="number"><b>1275</b></td>
+                            <td class="number">42</td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="number">20</td>
+                            <td class="player-name">A-king</td>
+                            <td class="number"><b>1175</b></td>
+                            <td class="number">79</td>
                         </tr>
                         </tbody></table></div></div></div>
 
         <div class="card">
             <div class="card-header"><h2 class="card-title">⭐ Community Champions</h2><p class="card-description">Celebrating memorable moments from across the community.</p></div>
-            <div class="card-body"><div class="feat-box">
-                    <div class="feat-item"><h3 class="feat-title">Giant Killer</h3>
-                        <p class="feat-highlight">+418 Rating Upset!</p><p class="feat-context"><b>spicypearl8</b> (1833)<br>defeated<br><b>Anthonyoja</b> (2251)</p>
+            <div class="card-body">
+                <div class="feat-box">
+                    <div class="feat-item">
+                        <h3 class="feat-title">Giant Killer</h3>
+                        <div class="feat-content-wrapper">
+                            
+                                <div class="feat-highlight">
+                                    <span class="number">+418</span>
+                                    <span class="label">Rating Upset!</span>
+                                </div>
+                                <p class="feat-context">
+                                    <b>spicypearl8</b> <span class="player-rating">(1833)</span> vs <b>Anthonyoja</b> <span class="player-rating">(2251)</span>
+                                </p>
+                            
                         </div>
-                    <div class="feat-item"><h3 class="feat-title">Marathon Man</h3>
-                         <p class="feat-highlight">63 Moves</p><p class="feat-context">An epic battle between<br><b>Ezengwori</b> & <b>ovokodigood</b></p>
-                        </div></div></div></div>
+                    </div>
+                    <div class="feat-item">
+                        <h3 class="feat-title">Marathon Man</h3>
+                        <div class="feat-content-wrapper">
+                             
+                                <div class="feat-highlight">
+                                    <span class="number">63</span>
+                                    <span class="label">Moves</span>
+                                </div>
+                                <p class="feat-context">
+                                    <b>Ezengwori</b> Vs <b>ovokodigood</b>
+                                </p>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="card">
             <div class="card-header"><h2 class="card-title">🏆 Top Dogs (MENDEM)</h2><p class="card-description">Podium Power Rankings (Top 10)</p></div>
@@ -353,7 +451,7 @@
                         </tr>
                         </tbody></table></div></div></div>
         
-        <div class="footer">BayorMiller Arena Series. CNO Stats Engine V12.</div>
+        <div class="footer">BayorMiller Arena Series. CNO Stats Engine V18.</div>
     </div>
 </body>
 </html>
