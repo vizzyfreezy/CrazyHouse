@@ -3,11 +3,11 @@ import os
 from jinja2 import Environment, FileSystemLoader
 from datetime import datetime
 import glicko2 # This will import your local glicko2.py file
-
+from collections import defaultdict
 # --- CONFIGURATION (OLD TABLES - GOLD STANDARD) ---
 DATA_DIR = "data_output"
 LAST_WEEK_DIR = "data_output_lastweek"
-TABLE_LIMITS = {"medals": 10, "ppg": 10, "berserk": 10, "iron_man": 10, "glicko_rankings": 20}
+TABLE_LIMITS = {"medals": 10, "ppg": 10, "berserk": 10, "iron_man": 10, "glicko_rankings": 25, "rivalries": 20}
 PPG_MIN_TOTAL_GAMES = 20
 BERSERK_MIN_GAMES = 10
 GLICKO_RD_CUTOFF=80
@@ -20,7 +20,12 @@ TEMPLATE_DIR = "templates"
 TEMPLATE_NAME = "report_template.html"
 OUTPUT_FILENAME = "Crazyhouse_Weekly_Report.html"
 USERNAME = "BayorMiller"
-
+# --- NEW RIVALRY CONFIG ---
+RIVALRY_MIN_GAMES = 10
+CAKEWALK_THRESHOLD = 0.70 # 70% win rate
+KRYPTONITE_THRESHOLD = 0.30 # 30% win rate
+NEMESIS_UPPER_BOUND = 0.60
+NEMESIS_LOWER_BOUND = 0.40
 # =================================================================================
 # SECTION 1: "GOLD STANDARD" LOGIC - RESTORED AND PRESERVED
 # =================================================================================
@@ -126,7 +131,45 @@ def calculate_inclusive_stats(all_games):
     if biggest_upset and (biggest_upset['loser_rating'] - biggest_upset['winner_rating'] <= 0): biggest_upset = None
     longest_game = max(all_games, key=lambda g: g['moves'], default=None)
     return {"giant_killer": biggest_upset, "marathon_man": longest_game}
+def calculate_nemesis_stats(all_games, established_players):
+    h2h = defaultdict(lambda: defaultdict(int))
+    for game in all_games:
+        p1, p2 = tuple(sorted((game['winner_name'], game['loser_name'])))
+        h2h[p1][p2] += 1
+        h2h[p2][p1] += 1
 
+    player_rivals = defaultdict(lambda: {'nemesis': None, 'kryptonite': None, 'cakewalk': None})
+
+    for p1 in established_players:
+        best = {'nemesis': [None, 1], 'kryptonite': [None, 1], 'cakewalk': [None, 0]}
+        
+        for p2, total_games in h2h[p1].items():
+            if p1 == p2 or total_games < RIVALRY_MIN_GAMES: continue
+            
+            p1_wins = sum(1 for g in all_games if (g['winner_name']==p1 and g['loser_name']==p2))
+            win_pct = p1_wins / total_games
+            
+            # Nemesis Check (closest to 50%)
+            if NEMESIS_LOWER_BOUND < win_pct < NEMESIS_UPPER_BOUND:
+                diff = abs(win_pct - 0.5)
+                if diff < best['nemesis'][1]:
+                    best['nemesis'] = [f"{p2} ({p1_wins}-{total_games - p1_wins})", diff]
+            
+            # Kryptonite Check (lowest win % <= 30%)
+            if win_pct <= KRYPTONITE_THRESHOLD:
+                if win_pct < best['kryptonite'][1]:
+                    best['kryptonite'] = [f"{p2} ({p1_wins}-{total_games - p1_wins})", win_pct]
+
+            # Cakewalk Check (highest win % >= 70%)
+            if win_pct >= CAKEWALK_THRESHOLD:
+                if win_pct > best['cakewalk'][1]:
+                    best['cakewalk'] = [f"{p2} ({p1_wins}-{total_games - p1_wins})", win_pct]
+        
+        player_rivals[p1]['nemesis'] = best['nemesis'][0]
+        player_rivals[p1]['kryptonite'] = best['kryptonite'][0]
+        player_rivals[p1]['cakewalk'] = best['cakewalk'][0]
+        
+    return dict(player_rivals)
 # =================================================================================
 # SECTION 3: THE UNIFIED MAIN FUNCTION
 # =================================================================================
@@ -159,6 +202,8 @@ def main():
     all_games = load_all_detailed_games(SOURCE_DIR_GAMES)
     glicko_rankings_all = calculate_glicko2_rankings(all_games)
     glicko_rankings = [p for p in glicko_rankings_all if p['rd'] < GLICKO_RD_CUTOFF]
+    established_player_names = {p['player'] for p in glicko_rankings}
+    nemesis_stats = calculate_nemesis_stats(all_games, established_player_names)
     inclusive_stats = calculate_inclusive_stats(all_games)
 
     # --- FINAL CONTEXT FOR TEMPLATE ---
@@ -166,6 +211,7 @@ def main():
         'generation_date': datetime.now().strftime("%B %d, %Y at %I:%M %p"), 'username': USERNAME, 'table_limits': TABLE_LIMITS, 'ppg_min_total_games': PPG_MIN_TOTAL_GAMES,
         'glicko_rankings': glicko_rankings[:TABLE_LIMITS['glicko_rankings']],
         'inclusive_stats': inclusive_stats,
+        'nemesis_stats': nemesis_stats,
         'medal_data': medal_data[:TABLE_LIMITS['medals']], 
         'ppg_data': ppg_data[:TABLE_LIMITS['ppg']],
         'berserk_data': berserk_data[:TABLE_LIMITS['berserk']], 

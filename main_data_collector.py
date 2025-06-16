@@ -8,7 +8,7 @@ import math
 import os
 
 USERNAME = 'Bayormiller_CNO'
-START_TIMESTAMP = int(datetime(2025, 5, 31, 0, 0, 0, tzinfo=timezone.utc).timestamp() * 1000)
+START_TIMESTAMP = int(datetime(2025, 6, 1, 0, 0, 0, tzinfo=timezone.utc).timestamp() * 1000)
 CACHE_DIR = 'tournament_cache'
 DATA_OUTPUT_DIR = 'data_output' # New directory for saving processed data
 
