@@ -1,23 +1,23 @@
 {
+    "hardeywale": {
+        "gold": 3,
+        "silver": 2,
+        "bronze": 1
+    },
+    "BayorMiller_CNO": {
+        "gold": 3,
+        "silver": 5,
+        "bronze": 2
+    },
     "Anthonyoja": {
         "gold": 5,
         "silver": 1,
-        "bronze": 2
-    },
-    "hardeywale": {
-        "gold": 2,
-        "silver": 3,
-        "bronze": 1
+        "bronze": 3
     },
     "dabee": {
         "gold": 2,
         "silver": 3,
         "bronze": 3
-    },
-    "BayorMiller_CNO": {
-        "gold": 4,
-        "silver": 4,
-        "bronze": 2
     },
     "Ageless_2": {
         "gold": 0,
@@ -42,6 +42,6 @@
     "Warlock_Dabee": {
         "gold": 1,
         "silver": 0,
-        "bronze": 1
+        "bronze": 0
     }
 }

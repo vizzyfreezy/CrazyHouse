@@ -11,8 +11,8 @@ SOURCE_DIR = "tournament_cache"
 DEST_DIR = "detailed_games"
 API_ENDPOINT = "https://lichess.org/api/tournament/{}/games"
 RATE_LIMIT_DELAY_SECONDS = 0
-START_DATE = "2025-05-31"
-END_DATE = "2025-06-14"
+START_DATE = "2025-06-01"
+END_DATE = "2025-06-15"
 
 
 def parse_pgn_stream(pgn_text):

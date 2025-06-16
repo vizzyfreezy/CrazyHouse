@@ -95,25 +95,6 @@ def main():
         print("\nNo tournaments processed. No data saved.")
 
 if __name__ == '__main__':
-    # Copy all your fetch and processing functions from the previous complete script here.
-    # For brevity, I'm omitting them, but they are essential.
-    # Make sure `update_player_overall_stats` uses the key 'tournaments_played_min_5_games'
-    # if that's the version of "Most Active Tournaments" you want.
-
-    # --- Placeholder for your existing functions (copy them here) ---
-    def load_from_cache(tournament_id): pass
-    def save_to_cache(tournament_id, data): pass
-    def fetch_created_tournaments(): yield from []; pass # Dummy
-    def fetch_tournament_details(tournament_id): return None; pass # Dummy
-    def process_tournament(data): pass
-    def process_medals(data): pass
-    def update_player_overall_stats(data): pass
-    def count_berserk_wins_from_sheet(scores_string): return 0; pass # Dummy
-    def process_berserk(data): pass
-    # --- End Placeholder ---
-    
-    # --- Actual function definitions (copy from your working script) ---
-    # (This is the copy of the functions from the previous "revert" script)
     def load_from_cache(tournament_id):
         cache_file = os.path.join(CACHE_DIR, f"{tournament_id}.json")
         if os.path.exists(cache_file):
@@ -246,6 +227,5 @@ if __name__ == '__main__':
                 entry["berserk_games"] += berserks_played_this_tourney
                 entry["berserk_wins"] += berserk_wins_counted
                 entry["total_games_in_podium_summary"] += total_games_for_podium_player_this_tourney
-    # --- End Actual Function Definitions ---
-    
+
     main()
