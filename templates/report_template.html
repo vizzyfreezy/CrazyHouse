@@ -1,61 +1,40 @@
-<!-- templates/report_template.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>🏆 CNO Crazyhouse Stats 🏆</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.counter.dev/script.js" data-id="83156484-6ad5-4215-9b61-ba67c55d2272" data-utcoffset="1"></script>
   
   <style>
-:root {
-    --theme-color: #8b5cf6;
-    --theme-gradient: linear-gradient(to right, #8b5cf6, #4f46e5);
+    :root {
+      --theme-color: #8b5cf6;
+      --theme-gradient: linear-gradient(to right, #8b5cf6, #4f46e5);
 
-    /* Light Theme */
-    --bg-color: #f3f4f6;
-    --text-color: #111827;
-    --subtext-color: #374151;
-    --faded-text-color: #6b7280;
-    --card-bg-color: #ffffff;
-    --card-border-color: #e5e7eb;
-    --table-border-color: #f3f4f6;
-    --table-header-color: #4b5563;
-    --feat-item-bg-color: #f9fafb;
-    --trend-neutral-bg: #f3f4f6;
-    --trend-neutral-text: #4b5563;
-    --trend-up-bg: #dcfce7;
-    --trend-up-text: #15803d;
-    --trend-down-bg: #fee2e2;
-    --trend-down-text: #b91c1c;
-    --trend-new-bg: #dbeafe;
-    --trend-new-text: #1e40af;
-    --scrollbar-track-bg: #f1f5f9;
-    --scrollbar-thumb-bg: #cbd5e1;
-  }
-
-  body.dark-mode {
-    /* Dark Theme */
-    --bg-color: #111827;
-    --text-color: #e5e7eb;
-    --subtext-color: #d1d5db;
-    --faded-text-color: #9ca3af;
-    --card-bg-color: #1f2937;
-    --card-border-color: #374151;
-    --table-border-color: #374151;
-    --table-header-color: #d1d5db;
-    --feat-item-bg-color: #374151;
-    --trend-neutral-bg: #4b5563;
-    --trend-neutral-text: #e5e7eb;
-    --trend-up-bg: #14532d;
-    --trend-up-text: #a7f3d0;
-    --trend-down-bg: #7f1d1d;
-    --trend-down-text: #fecaca;
-    --trend-new-bg: #1e3a8a;
-    --trend-new-text: #bfdbfe;
-    --scrollbar-track-bg: #1f2937;
-    --scrollbar-thumb-bg: #4b5563;
-  }
+      /* Dark Theme Variables (Locked) */
+      --bg-color: #111827;
+      --text-color: #e5e7eb;
+      --subtext-color: #d1d5db;
+      --faded-text-color: #9ca3af;
+      --card-bg-color: #1f2937;
+      --card-border-color: #374151;
+      --table-border-color: #374151;
+      --table-header-color: #d1d5db;
+      --feat-item-bg-color: #374151;
+      --trend-neutral-bg: #4b5563;
+      --trend-neutral-text: #e5e7eb;
+      --trend-up-bg: #14532d;
+      --trend-up-text: #a7f3d0;
+      --trend-down-bg: #7f1d1d;
+      --trend-down-text: #fecaca;
+      --trend-new-bg: #1e3a8a;
+      --trend-new-text: #bfdbfe;
+      --scrollbar-track-bg: #1f2937;
+      --scrollbar-thumb-bg: #4b5563;
+    }
 
     body {
       font-family: 'Inter', sans-serif;
@@ -63,7 +42,6 @@
       color: var(--text-color);
       margin: 0;
       padding: 1.5rem;
-      transition: background-color 0.3s, color 0.3s;
     }
     .container {
       max-width: 800px;
@@ -76,7 +54,6 @@
       text-align: center;
       margin-bottom: 0.5rem;
       position: relative;
-      padding-top: 40px; /* Space for the toggle switch */
     }
     .page-title {
       font-size: 1.75rem;
@@ -98,32 +75,25 @@
       text-align: left;
       font-size: 0.75rem;
       color: var(--faded-text-color);
-      padding: 0.5rem;
+      padding: 0.75rem;
       background-color: var(--card-border-color);
       border-radius: 0.5rem;
-      margin-bottom: 1rem;
+      margin-top: 1rem;
       display: flex;
       flex-wrap: wrap;
-      gap: 0.75rem;
+      gap: 1rem;
       list-style: none;
-      padding-left: 0;
-      margin: 0;
+      padding-left: 0.75rem;
+      margin-bottom: 0;
     }
-
-    .stats-key li {
-      display: inline;
-    }
-
-    .stats-key b {
-      color: var(--subtext-color);
-    }
+    .stats-key li { display: inline; }
+    .stats-key b { color: var(--subtext-color); }
     .card {
       background-color: var(--card-bg-color);
       border: 1px solid var(--card-border-color);
       border-radius: 0.75rem;
       overflow: hidden;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
-      transition: background-color 0.3s, border-color 0.3s;
     }
     .card-header {
       padding: 1rem 1.25rem;
@@ -143,24 +113,11 @@
       border-left: 2px solid rgba(255, 255, 255, 0.5);
       opacity: 0.9;
     }
-    .card-body {
-      padding: 0.8rem 1.25rem;
-    }
-    .table-wrapper {
-      overflow-x: auto;
-    }
-
-    .table-wrapper::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    .table-wrapper::-webkit-scrollbar-track {
-      background: var(--scrollbar-track-bg);
-    }
-
-    .table-wrapper::-webkit-scrollbar-thumb {
-      background: var(--scrollbar-thumb-bg);
-    }
+    .card-body { padding: 0.8rem 1.25rem; }
+    .table-wrapper { overflow-x: auto; }
+    .table-wrapper::-webkit-scrollbar { height: 6px; }
+    .table-wrapper::-webkit-scrollbar-track { background: var(--scrollbar-track-bg); }
+    .table-wrapper::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb-bg); }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -176,12 +133,8 @@
       font-weight: 600;
       color: var(--table-header-color);
     }
-    tr:last-child td {
-      border-bottom: 0;
-    }
-    td.number, th.number {
-      text-align: center;
-    }
+    tr:last-child td { border-bottom: 0; }
+    td.number, th.number { text-align: center; }
     td.player-name {
       font-weight: 600;
       color: var(--theme-color);
@@ -193,36 +146,23 @@
       color: var(--faded-text-color);
     }
     .trend {
-      font-size: 0.6em; /* Drastically smaller font */
+      font-size: 0.6em;
       font-weight: 700;
-      margin-left: 2px; /* Much closer to the rank */
-      padding: 0.1em 0.3em; /* Absolute minimum padding */
+      margin-left: 2px;
+      padding: 0.1em 0.3em;
       border-radius: 0.25rem;
       line-height: 1;
       vertical-align: super;
-      display: inline-block; /* Needed for padding to apply correctly */
+      display: inline-block;
       text-align: center;
     }
-    .trend-up {
-      background-color: var(--trend-up-bg);
-      color: var(--trend-up-text);
-    }
-    .trend-down {
-      background-color: var(--trend-down-bg);
-      color: var(--trend-down-text);
-    }
-    .trend-new {
-      background-color: var(--trend-new-bg);
-      color: var(--trend-new-text);
-    }
-    .trend-neutral {
-      background-color: var(--trend-neutral-bg);
-      color: var(--trend-neutral-text);
-    }
+    .trend-up { background-color: var(--trend-up-bg); color: var(--trend-up-text); }
+    .trend-down { background-color: var(--trend-down-bg); color: var(--trend-down-text); }
+    .trend-new { background-color: var(--trend-new-bg); color: var(--trend-new-text); }
+    .trend-neutral { background-color: var(--trend-neutral-bg); color: var(--trend-neutral-text); }
     .gold { color: #f59e0b; }
     .silver { color: #71717a; }
     .bronze { color: #a16207; }
-
     .feat-box {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -278,417 +218,312 @@
       font-weight: 400;
       color: var(--faded-text-color);
     }
-
     .nemesis { color: #f59e0b; font-weight: 500; }
     .kryptonite { color: #ef4444; font-weight: 500; }
     .cakewalk { color: #22c55e; font-weight: 500; }
 
-    /* Theme Toggle Switch */
-    .theme-switch-wrapper {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      display: flex;
-      align-items: center;
-    }
-    .theme-switch {
-      display: inline-block;
-      height: 24px;
-      position: relative;
-      width: 44px;
-    }
-    .theme-switch input {
-      display:none;
-    }
-    .slider {
-      background-color: #4b5563;
-      bottom: 0;
-      cursor: pointer;
-      left: 0;
-      position: absolute;
-      right: 0;
-      top: 0;
-      transition: .4s;
-      border-radius: 24px;
-    }
-    .slider:before {
-      background-color: #fff;
-      bottom: 4px;
-      content: "";
-      height: 16px;
-      left: 4px;
-      position: absolute;
-      transition: .4s;
-      width: 16px;
-      border-radius: 50%;
-    }
-    input:checked + .slider {
-      background-color: var(--theme-color);
-    }
-    input:checked + .slider:before {
-      transform: translateX(20px);
-    }
-
     @media (max-width: 640px) {
       .feat-box { grid-template-columns: 1fr; }
-      .page-header {
-        padding-top: 50px; /* More space for mobile */
-      }
-      .theme-switch-wrapper {
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%); /* Center the toggle */
-      }
     }
   </style>
 </head>
-<body>
-  <div class="container">
-    <header class="page-header">
-      <div>
-        <h1 class="page-title">CNO Daily Crazyhouse</h1>
-        <p class="page-subtitle">
-          Bi-Weekly Stats Report<br>
-          <span style="font-weight: bold; font-size: 12px; text-decoration: underline;">01-JUN-25 TO 15-JUN-25</span>
-        </p>
-        <p class="timestamp">
-          Powered By BayorMiller
-        </p>
+<body class="dark-mode">
+
+<div class="container">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">CNO Daily Crazyhouse</h1>
+      <p class="page-subtitle">
+        Bi-Weekly Stats Report<br>
+        <span style="font-weight: bold; font-size: 12px; text-decoration: underline;">15-JUN-25 TO 29-JUN-25</span>
+      </p>
+      <p class="timestamp">Powered By BayorMiller</p>
+    </div>
+  </header>
+
+  <!-- Top Dogs (Medals) -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">🏆 Top Dogs (MEN DEM)</h2>
+      <p class="card-description">Podium Power Rankings (Top {{ table_limits.medals }})</p>
+    </div>
+    <div class="card-body">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th class="number">Rank</th><th>Player</th><th class="number">Score</th><th class="number">🥇</th><th class="number">🥈</th><th class="number">🥉</th></tr>
+          </thead>
+          <tbody>
+            {% for item in medal_data %}
+            <tr>
+              <td class="number">{{ loop.index }}{% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>{% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>{% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>{% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}</td>
+              <td class="player-name">{{ item.player }}</td>
+              <td class="number"><b>{{ item.score }}</b></td>
+              <td class="number gold">{{ item.gold }}</td>
+              <td class="number silver">{{ item.silver }}</td>
+              <td class="number bronze">{{ item.bronze }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-      <div class="theme-switch-wrapper">
-        <label class="theme-switch" for="checkbox">
-          <input type="checkbox" id="checkbox" />
-          <div class="slider round"></div>
-        </label>
+    </div>
+  </div>
+
+  <!-- CNO Power Rankings -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">👑 CNO Power Rankings</h2>
+      <p class="card-description">The ultimate strength ranking for active players.</p>
+    </div>
+    <div class="card-body">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th class="number">Rank</th><th>Player</th><th class="number">Score</th><th class="number">SD</th></tr>
+          </thead>
+          <tbody>
+            {% for item in glicko_rankings %}
+            <tr>
+              <td class="number">{{ loop.index }}{% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>{% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>{% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>{% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}</td>
+              <td class="player-name">{{ item.player }}</td>
+              <td class="number"><b>{{ "%.0f"|format(item.rating) }}</b></td>
+              <td class="number">{{ "%.0f"|format(item.rd) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-    </header>
+    </div>
+  </div>
 
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">👑 CNO Power Rankings</h2><p class="card-description">
-            The ultimate strength ranking for active players.
-          </p>
+  <!-- Rivalries -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">⚔️ Who Dey BREET?</h2>
+      <p class="card-description">Ops (No gree for anybody)<br>Kryptonite (Tormentor)<br>Light Work (Customer dada).</p>
+    </div>
+    <div class="card-body" id="rivalry-table-wrapper">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Player</th><th>Ops</th><th>Kryptonite</th><th>Light Work</th></tr>
+          </thead>
+          <tbody>
+            {% for p in glicko_rankings[:table_limits.rivalries] %}
+            <tr>
+              <td class="player-name">{{ p.player }}</td>
+              <td class="nemesis">{{ nemesis_stats[p.player].nemesis or '—' }}</td>
+              <td class="kryptonite">{{ nemesis_stats[p.player].kryptonite or '—' }}</td>
+              <td class="cakewalk">{{ nemesis_stats[p.player].cakewalk or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zombie Spotlight -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">⭐ Zombie Spotlight</h2>
+      <p class="card-description">Punching above your weight and longest game.</p>
+    </div>
+    <div class="card-body">
+      <div class="feat-box">
+        <div class="feat-item">
+          <h3 class="feat-title">Giant Killer</h3>
+          <div class="feat-content-wrapper">
+            {% if inclusive_stats.giant_killer %}
+            <div class="feat-highlight">
+              <span class="number">+{{ inclusive_stats.giant_killer.loser_rating - inclusive_stats.giant_killer.winner_rating }}</span>
+              <span class="label">Rating Upset!</span>
+            </div>
+            <p class="feat-context">
+              <b>{{ inclusive_stats.giant_killer.winner_name }}</b> <span class="player-rating">({{ inclusive_stats.giant_killer.winner_rating }})</span> vs <b>{{ inclusive_stats.giant_killer.loser_name }}</b> <span class="player-rating">({{ inclusive_stats.giant_killer.loser_rating }})</span>
+            </p>
+            {% else %}
+            <p class="feat-context">No major upsets this week.</p>
+            {% endif %}
+          </div>
         </div>
-        <div class="card-body">
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Score</th><th class="number">SD</th></tr>
-              </thead>
-              <tbody>
-                {% for item in glicko_rankings %}
-                <tr>
-                  <td class="number">{{ loop.index }}{% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>{% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>{% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>{% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}</td>
-                  <td class="player-name">{{ item.player }}</td>
-                  <td class="number"><b>{{ "%.0f"|format(item.rating) }}</b></td>
-                  <td class="number">{{ "%.0f"|format(item.rd) }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+        <div class="feat-item">
+          <h3 class="feat-title">Long Walk 2 Mate</h3>
+          <div class="feat-content-wrapper">
+            {% if inclusive_stats.marathon_man %}
+            <div class="feat-highlight">
+              <span class="number">{{ inclusive_stats.marathon_man.moves }}</span>
+              <span class="label">Moves</span>
+            </div>
+            <p class="feat-context">
+              <b>{{ inclusive_stats.marathon_man.winner_name }}</b> Vs <b>{{ inclusive_stats.marathon_man.loser_name }}</b>
+            </p>
+            {% else %}
+            <p class="feat-context">No games played this week.</p>
+            {% endif %}
           </div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">🏆 Top Dogs (MEN DEM)</h2><p class="card-description">
-            Podium Power Rankings (Top {{ table_limits.medals }})
-          </p>
-        </div>
-        <div class="card-body">
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">Score</th><th class="number">🥇</th><th class="number">🥈</th><th class="number">🥉</th></tr>
-              </thead>
-              <tbody>
-                {% for item in medal_data %}
-                <tr>
-                  <td class="number">{{ loop.index }}{% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>{% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>{% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>{% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}</td>
-                    <td class="player-name">{{ item.player }}</td><td class="number"><b>{{ item.score }}</b></td><td class="number gold">{{ item.gold }}</td><td class="number silver">{{ item.silver }}</td><td class="number bronze">{{ item.bronze }}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">⚔️ Who Dey BREET?</h2><p class="card-description">
-              Ops (No gree for anybody)<br>Kryptonite (Tormentor)<br>Light Work (Customer dada).
-            </p>
-          </div>
-          <div class="card-body" id="rivalry-table-wrapper">
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr><th>Player</th><th>Ops</th><th>Kryptonite</th><th>Light Work</th></tr>
-                </thead>
-                <tbody>
-                  {% for p in glicko_rankings[:table_limits.rivalries] %}
-                  <tr>
-                    <td class="player-name">{{ p.player }}</td>
-                    <td class="nemesis">{{ nemesis_stats[p.player].nemesis or '—' }}</td>
-                    <td class="kryptonite">{{ nemesis_stats[p.player].kryptonite or '—' }}</td>
-                    <td class="cakewalk">{{ nemesis_stats[p.player].cakewalk or '—' }}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">⭐ Zombie Spotlight </h2><p class="card-description">
-              Punching above your weight and longest game.
-            </p>
-          </div>
-          <div class="card-body">
-            <div class="feat-box">
-              <div class="feat-item">
-                <h3 class="feat-title">Giant Killer</h3>
-                <div class="feat-content-wrapper">
-                  {% if inclusive_stats.giant_killer %}
-                  <div class="feat-highlight">
-                    <span class="number">+{{ inclusive_stats.giant_killer.loser_rating - inclusive_stats.giant_killer.winner_rating }}</span>
-                    <span class="label">Rating Upset!</span>
-                  </div>
-                  <p class="feat-context">
-                    <b>{{ inclusive_stats.giant_killer.winner_name }}</b> <span class="player-rating">({{ inclusive_stats.giant_killer.winner_rating }})</span> vs <b>{{ inclusive_stats.giant_killer.loser_name }}</b> <span class="player-rating">({{ inclusive_stats.giant_killer.loser_rating }})</span>
-                  </p>
-                  {% else %}<p class="feat-context">
-                    No major upsets this week.
-                  </p>
-                  {% endif %}
-                </div>
-              </div>
-              <div class="feat-item">
-                <h3 class="feat-title">Long Walk 2 Mate</h3>
-                <div class="feat-content-wrapper">
-                  {% if inclusive_stats.marathon_man %}
-                  <div class="feat-highlight">
-                    <span class="number">{{ inclusive_stats.marathon_man.moves }}</span>
-                    <span class="label">Moves</span>
-                  </div>
-                  <p class="feat-context">
-                    <b>{{ inclusive_stats.marathon_man.winner_name }}</b> Vs <b>{{ inclusive_stats.marathon_man.loser_name }}</b>
-                  </p>
-                  {% else %}<p class="feat-context">
-                    No games played this week.
-                  </p>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    </div>
+  </div>
 
+  <!-- Most Lethal -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">🎯 Most Lethal</h2>
+      <p class="card-description">If you come across these guys then resignation is the best move. (Top {{ table_limits.ppg }})</p>
+    </div>
+    <div class="card-body">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th class="number">Rank</th><th>Player</th><th class="number">PPG</th><th class="number">Pts</th><th class="number">GP</th></tr>
+          </thead>
+          <tbody>
+            {% for item in ppg_data %}
+            <tr>
+              <td class="number">{{ loop.index }}{% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>{% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>{% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>{% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}</td>
+              <td class="player-name">{{ item.player }}</td>
+              <td class="number">{{ "%.2f"|format(item.ppg) }}</td>
+              <td class="number">{{ item.total_score }}</td>
+              <td class="number">{{ item.total_games }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">🎯 Most Lethal</h2><p class="card-description">
-              If you come across these guys then resignation is the best move. (Top {{ table_limits.ppg }})
-            </p>
-          </div>
-          <div class="card-body">
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">PPG</th><th class="number">Pts</th><th class="number">GP</th></tr>
-                </thead>
-                <tbody>
-                  {% for item in ppg_data %}
-                  <tr>
-                    <td class="number">{{ loop.index }}{% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>{% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>{% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>{% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}</td>
-                      <td class="player-name">{{ item.player }}</td><td class="number">{{ "%.2f"|format(item.ppg) }}</td><td class="number">{{ item.total_score }}</td><td class="number">{{ item.total_games }}</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+  <!-- Agba Berserkers -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">🔥 Agba Berserkers</h2>
+      <p class="card-description">They don't care if you are Magnus, you go still collect berserk and get spanked. (Top {{ table_limits.berserk }})</p>
+    </div>
+    <div class="card-body">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th class="number">Rank</th><th>Player</th><th class="number">BZ%</th><th class="number">Win%</th><th class="number">W</th><th class="number">L</th></tr>
+          </thead>
+          <tbody>
+            {% for item in berserk_data %}
+            <tr>
+              <td class="number">{{ loop.index }}{% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>{% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>{% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>{% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}</td>
+              <td class="player-name">{{ item.player }}</td>
+              <td class="number">{{ "%.1f"|format(item.freq * 100) }}%</td>
+              <td class="number">{{ "%.1f"|format(item.win_rate * 100) }}%</td>
+              <td class="number">{{ item.berserk_wins }}</td>
+              <td class="number">{{ item.berserk_games - item.berserk_wins }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">🔥 Agba Berserkers</h2><p class="card-description">
-                They don't care if you are Magnus, you go still collect berserk and get spanked. (Top {{ table_limits.berserk }})
-              </p>
-            </div>
-            <div class="card-body">
-              <div class="table-wrapper">
-                <table>
-                  <thead>
-                    <tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">BZ%</th><th class="number">Win%</th><th class="number">W</th><th class="number">L</th></tr>
-                  </thead>
-                  <tbody>
-                    {% for item in berserk_data %}
-                    <tr>
-                      <td class="number">{{ loop.index }}{% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>{% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>{% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>{% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}</td>
-                        <td class="player-name">{{ item.player }}</td><td class="number">{{ "%.1f"|format(item.freq * 100) }}%</td><td class="number">{{ "%.1f"|format(item.win_rate * 100) }}%</td><td class="number">{{ item.berserk_wins }}</td><td class="number">{{ item.berserk_games - item.berserk_wins }}</td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+  <!-- Agba Loot Hunters -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">🗿 Agba Loot Hunters</h2>
+      <p class="card-description">These men no dey take eye see link with loot dem go raid am. (Top {{ table_limits.iron_man }})</p>
+    </div>
+    <div class="card-body">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th class="number">Rank</th><th>Player</th><th class="number">GP</th></tr>
+          </thead>
+          <tbody>
+            {% for item in iron_man_data %}
+            <tr>
+              <td class="number">{{ loop.index }}{% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>{% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>{% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>{% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}</td>
+              <td class="player-name">{{ item.player }}</td>
+              <td class="number">{{ item.total_games }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-            <div class="card">
-              <div class="card-header">
-                <h2 class="card-title">🗿 Agba Loot Hunters</h2><p class="card-description">
-                  These men no dey take eye see link with loot dem go raid am. (Top {{ table_limits.iron_man }})
-                </p>
-              </div>
-              <div class="card-body">
-                <div class="table-wrapper">
-                  <table>
-                    <thead>
-                      <tr><th class="number">Rank</th><th class="player-name">Player</th><th class="number">GP</th></tr>
-                    </thead>
-                    <tbody>
-                      {% for item in iron_man_data %}
-                      <tr>
-                        <td class="number">{{ loop.index }}{% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>{% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>{% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>{% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}</td>
-                          <td class="player-name">{{ item.player }}</td><td class="number">{{ item.total_games }}</td>
-                        </tr>
-                        {% endfor %}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-              <ul class="stats-key">
-                <li><b>Pts:</b> Total Points</li>
-                <li><b>GP:</b> Games Played</li>
-                <li><b>PPG:</b> Points Per Game</li>
-                <li><b>BZ%:</b> Berserk Frequency</li>
-                <li><b>Win%:</b> Berserk Win Rate</li>
-                <li><b>SD:</b> Score Deviation</li>
-              </ul>
+  <ul class="stats-key">
+    <li><b>Pts:</b> Total Points</li>
+    <li><b>GP:</b> Games Played</li>
+    <li><b>PPG:</b> Points Per Game</li>
+    <li><b>BZ%:</b> Berserk Frequency</li>
+    <li><b>Win%:</b> Berserk Win Rate</li>
+    <li><b>SD:</b> Score Deviation</li>
+  </ul>
 
-              <div class="footer">
-  {{ username }} Arena Series. <br>
-  CNO Stats Engine. <br>
-  &copy; <span id="year"></span> All rights reserved. <br>
-  Designed by <strong>vague</strong> aka <em>cornyBambi</em>.
-</div>
+  <div class="footer">
+    {{ username }} Arena Series. <br>
+    CNO Stats Engine. <br>
+    © <span id="year"></span> All rights reserved. <br>
+    Designed by <strong>vague</strong> aka <em>cornyBambi</em>.
+  </div>
+
+</div> <!-- This closes the .container div -->
 
 <script>
-  // Set the current year dynamically
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('year').textContent = new Date().getFullYear();
-  });
-</script>
-            </div>
-            <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const rivalryTableWrapper = document.querySelector('#rivalry-table-wrapper .table-wrapper');
-    if (!rivalryTableWrapper) return;
+document.addEventListener('DOMContentLoaded', () => {
+  // Set current year in footer
+  document.getElementById('year').textContent = new Date().getFullYear();
 
+  // Rivalry table auto-scroll logic
+  const rivalryTableWrapper = document.querySelector('#rivalry-table-wrapper .table-wrapper');
+  if (rivalryTableWrapper) {
     const isScrollable = rivalryTableWrapper.scrollWidth > rivalryTableWrapper.clientWidth;
-    if (!isScrollable) return;
+    if (isScrollable) {
+      let animationRunning = true;
+      let lastScrollLeft = rivalryTableWrapper.scrollLeft;
 
-    let animationRunning = true;
-    let lastScrollLeft = rivalryTableWrapper.scrollLeft;
-
-    const smoothHorizontalScroll = (element, to, duration) => {
-      const start = element.scrollLeft;
-      const change = to - start;
-      const startTime = performance.now();
-
-      const animateScroll = (currentTime) => {
-        if (!animationRunning) return;
-
-        const elapsedTime = currentTime - startTime;
-        const progress = Math.min(elapsedTime / duration, 1);
-
-        const easeInOut = progress < 0.5
-          ? 2 * progress * progress
-          : -1 + (4 - 2 * progress) * progress;
-
-        element.scrollLeft = start + change * easeInOut;
-
-        if (elapsedTime < duration) {
-          requestAnimationFrame(animateScroll);
-        }
+      const smoothHorizontalScroll = (element, to, duration) => {
+        const start = element.scrollLeft;
+        const change = to - start;
+        const startTime = performance.now();
+        const animateScroll = (currentTime) => {
+          if (!animationRunning) return;
+          const elapsedTime = currentTime - startTime;
+          const progress = Math.min(elapsedTime / duration, 1);
+          const easeInOut = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+          element.scrollLeft = start + change * easeInOut;
+          if (elapsedTime < duration) {
+            requestAnimationFrame(animateScroll);
+          }
+        };
+        requestAnimationFrame(animateScroll);
       };
 
-      requestAnimationFrame(animateScroll);
-    };
-
-    const handleScroll = () => {
-      const currentScrollLeft = rivalryTableWrapper.scrollLeft;
-      if (Math.abs(currentScrollLeft - lastScrollLeft) > 5) { // scroll threshold
-        animationRunning = false;
-        rivalryTableWrapper.removeEventListener('scroll', handleScroll);
-        observer.disconnect();
-      }
-      lastScrollLeft = currentScrollLeft;
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const duration = 10000;
-          setTimeout(() => {
-            if (animationRunning) {
-              smoothHorizontalScroll(rivalryTableWrapper, rivalryTableWrapper.scrollWidth, duration);
-            }
-          }, 500);
-
-          setTimeout(() => {
-            if (animationRunning) {
-              smoothHorizontalScroll(rivalryTableWrapper, 0, duration);
-            }
-          }, duration + 1000);
-
-          rivalryTableWrapper.addEventListener('scroll', handleScroll);
-          observer.disconnect(); // Stop observing after trigger
+      const handleScroll = () => {
+        if (Math.abs(rivalryTableWrapper.scrollLeft - lastScrollLeft) > 5) {
+          animationRunning = false;
+          rivalryTableWrapper.removeEventListener('scroll', handleScroll);
+          if (observer) observer.disconnect();
         }
-      });
-    }, {
-      threshold: 0.5
-    });
+        lastScrollLeft = rivalryTableWrapper.scrollLeft;
+      };
 
-    observer.observe(rivalryTableWrapper);
-  });
-</script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const themeSwitch = document.getElementById('checkbox');
-    const currentTheme = localStorage.getItem('theme');
-
-    function setTheme(theme) {
-      if (theme === 'dark') {
-        document.body.classList.add('dark-mode');
-        themeSwitch.checked = false;
-      } else {
-        document.body.classList.remove('dark-mode');
-        themeSwitch.checked = true;
-      }
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const duration = 10000;
+            setTimeout(() => { if (animationRunning) smoothHorizontalScroll(rivalryTableWrapper, rivalryTableWrapper.scrollWidth, duration); }, 500);
+            setTimeout(() => { if (animationRunning) smoothHorizontalScroll(rivalryTableWrapper, 0, duration); }, duration + 1000);
+            rivalryTableWrapper.addEventListener('scroll', handleScroll);
+            observer.disconnect();
+          }
+        });
+      }, { threshold: 0.5 });
+      observer.observe(rivalryTableWrapper);
     }
-
-    // Default to dark mode if no theme is set
-    if (currentTheme) {
-      setTheme(currentTheme);
-    } else {
-      setTheme('dark');
-      localStorage.setItem('theme', 'dark');
-    }
-
-    themeSwitch.addEventListener('change', function(event) {
-      if (event.target.checked) {
-        setTheme('light');
-        localStorage.setItem('theme', 'light');
-      } else {
-        setTheme('dark');
-        localStorage.setItem('theme', 'dark');
-      }
-    });
-  });
+  }
+});
 </script>
-          </body>
-        </html>
+
+</body>
+</html>
