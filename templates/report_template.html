@@ -9,15 +9,61 @@
   
   <style>
 :root {
-    --theme-color: #6d28d9;
+    --theme-color: #8b5cf6;
     --theme-gradient: linear-gradient(to right, #8b5cf6, #4f46e5);
+
+    /* Light Theme */
+    --bg-color: #f3f4f6;
+    --text-color: #111827;
+    --subtext-color: #374151;
+    --faded-text-color: #6b7280;
+    --card-bg-color: #ffffff;
+    --card-border-color: #e5e7eb;
+    --table-border-color: #f3f4f6;
+    --table-header-color: #4b5563;
+    --feat-item-bg-color: #f9fafb;
+    --trend-neutral-bg: #f3f4f6;
+    --trend-neutral-text: #4b5563;
+    --trend-up-bg: #dcfce7;
+    --trend-up-text: #15803d;
+    --trend-down-bg: #fee2e2;
+    --trend-down-text: #b91c1c;
+    --trend-new-bg: #dbeafe;
+    --trend-new-text: #1e40af;
+    --scrollbar-track-bg: #f1f5f9;
+    --scrollbar-thumb-bg: #cbd5e1;
   }
+
+  body.dark-mode {
+    /* Dark Theme */
+    --bg-color: #111827;
+    --text-color: #e5e7eb;
+    --subtext-color: #d1d5db;
+    --faded-text-color: #9ca3af;
+    --card-bg-color: #1f2937;
+    --card-border-color: #374151;
+    --table-border-color: #374151;
+    --table-header-color: #d1d5db;
+    --feat-item-bg-color: #374151;
+    --trend-neutral-bg: #4b5563;
+    --trend-neutral-text: #e5e7eb;
+    --trend-up-bg: #14532d;
+    --trend-up-text: #a7f3d0;
+    --trend-down-bg: #7f1d1d;
+    --trend-down-text: #fecaca;
+    --trend-new-bg: #1e3a8a;
+    --trend-new-text: #bfdbfe;
+    --scrollbar-track-bg: #1f2937;
+    --scrollbar-thumb-bg: #4b5563;
+  }
+
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f3f4f6;
-      color: #111827;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       margin: 0;
       padding: 1.5rem;
+      transition: background-color 0.3s, color 0.3s;
     }
     .container {
       max-width: 800px;
@@ -29,6 +75,8 @@
     .page-header {
       text-align: center;
       margin-bottom: 0.5rem;
+      position: relative;
+      padding-top: 40px; /* Space for the toggle switch */
     }
     .page-title {
       font-size: 1.75rem;
@@ -39,22 +87,21 @@
     .page-subtitle {
       font-size: 1.1rem;
       font-weight: 500;
-      color: #374151;
+      color: var(--subtext-color);
       margin: 0.25rem 0 0.5rem 0;
     }
     .timestamp {
       font-size: 0.8rem;
-      color: #6b7280;
+      color: var(--faded-text-color);
     }
     .stats-key {
       text-align: left;
       font-size: 0.75rem;
-      color: #6b7280;
+      color: var(--faded-text-color);
       padding: 0.5rem;
-      background-color: #e5e7eb;
+      background-color: var(--card-border-color);
       border-radius: 0.5rem;
       margin-bottom: 1rem;
-
       display: flex;
       flex-wrap: wrap;
       gap: 0.75rem;
@@ -65,18 +112,18 @@
 
     .stats-key li {
       display: inline;
-
     }
 
     .stats-key b {
-      color: #374151;
+      color: var(--subtext-color);
     }
     .card {
-      background-color: #ffffff;
-      border: 1px solid #e5e7eb;
+      background-color: var(--card-bg-color);
+      border: 1px solid var(--card-border-color);
       border-radius: 0.75rem;
       overflow: hidden;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+      transition: background-color 0.3s, border-color 0.3s;
     }
     .card-header {
       padding: 1rem 1.25rem;
@@ -108,11 +155,11 @@
     }
 
     .table-wrapper::-webkit-scrollbar-track {
-      background: #f1f5f9;
+      background: var(--scrollbar-track-bg);
     }
 
     .table-wrapper::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
+      background: var(--scrollbar-thumb-bg);
     }
     table {
       width: 100%;
@@ -122,12 +169,12 @@
     th, td {
       padding: 0.5rem 0.4rem;
       text-align: left;
-      border-bottom: 1px solid #f3f4f6;
+      border-bottom: 1px solid var(--table-border-color);
       white-space: nowrap;
     }
     th {
       font-weight: 600;
-      color: #4b5563;
+      color: var(--table-header-color);
     }
     tr:last-child td {
       border-bottom: 0;
@@ -143,51 +190,38 @@
       text-align: center;
       margin-top: 1.5rem;
       font-size: 0.75rem;
-      color: #9ca3af;
+      color: var(--faded-text-color);
     }
     .trend {
-      display: inline-block;
-      font-size: 0.7em;
+      font-size: 0.6em; /* Drastically smaller font */
       font-weight: 700;
-      margin-left: 0.25rem;
-      vertical-align: 0.2em;
-      padding: 0.1em 0.3em;
+      margin-left: 2px; /* Much closer to the rank */
+      padding: 0.1em 0.3em; /* Absolute minimum padding */
       border-radius: 0.25rem;
       line-height: 1;
-      width: 2
-      5em;
+      vertical-align: super;
+      display: inline-block; /* Needed for padding to apply correctly */
       text-align: center;
     }
     .trend-up {
-      background-color: #dcfce7;
-      color: #15803d;
+      background-color: var(--trend-up-bg);
+      color: var(--trend-up-text);
     }
-
     .trend-down {
-      background-color: #fee2e2;
-      color: #b91c1c;
+      background-color: var(--trend-down-bg);
+      color: var(--trend-down-text);
     }
-
     .trend-new {
-      background-color: #dbeafe;
-      color: #1e40af;
+      background-color: var(--trend-new-bg);
+      color: var(--trend-new-text);
     }
-
     .trend-neutral {
-      background-color: #f3f4f6;
-      color: #4b5563;
+      background-color: var(--trend-neutral-bg);
+      color: var(--trend-neutral-text);
     }
-    .gold {
-      color: #f59e0b;
-    }
-
-    .silver {
-      color: #71717a;
-    }
-
-    .bronze {
-      color: #a16207;
-    }
+    .gold { color: #f59e0b; }
+    .silver { color: #71717a; }
+    .bronze { color: #a16207; }
 
     .feat-box {
       display: grid;
@@ -196,10 +230,10 @@
       align-items: stretch;
     }
     .feat-item {
-      background: #f9fafb;
+      background: var(--feat-item-bg-color);
       padding: 1rem 0.75rem;
       border-radius: 0.5rem;
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--card-border-color);
       display: flex;
       flex-direction: column;
       text-align: center;
@@ -207,7 +241,7 @@
     .feat-title {
       font-size: 0.85rem;
       font-weight: 600;
-      color: #4b5563;
+      color: var(--table-header-color);
       margin: 0;
       padding-bottom: 0.5rem;
     }
@@ -227,62 +261,107 @@
       line-height: 1;
       margin: 0.25rem 0;
     }
-    .feat-highlight .number {
-      font-size: 1.8rem;
-    }
-    .feat-highlight .label {
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
+    .feat-highlight .number { font-size: 1.8rem; }
+    .feat-highlight .label { font-size: 1.1rem; font-weight: 600; }
     .feat-context {
       font-size: 0.8rem;
-      color: #6b7280;
+      color: var(--faded-text-color);
       line-height: 1.3;
       margin-top: 0.25rem;
     }
     .feat-context b {
-      color: #374151;
+      color: var(--subtext-color);
       font-weight: 600;
     }
     .player-rating {
       font-size: 0.7rem;
       font-weight: 400;
-      color: #6b7280;
+      color: var(--faded-text-color);
+    }
+
+    .nemesis { color: #f59e0b; font-weight: 500; }
+    .kryptonite { color: #ef4444; font-weight: 500; }
+    .cakewalk { color: #22c55e; font-weight: 500; }
+
+    /* Theme Toggle Switch */
+    .theme-switch-wrapper {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      align-items: center;
+    }
+    .theme-switch {
+      display: inline-block;
+      height: 24px;
+      position: relative;
+      width: 44px;
+    }
+    .theme-switch input {
+      display:none;
+    }
+    .slider {
+      background-color: #4b5563;
+      bottom: 0;
+      cursor: pointer;
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      background-color: #fff;
+      bottom: 4px;
+      content: "";
+      height: 16px;
+      left: 4px;
+      position: absolute;
+      transition: .4s;
+      width: 16px;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--theme-color);
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
     }
 
     @media (max-width: 640px) {
-      .feat-box {
-        grid-template-columns: 1fr;
-
+      .feat-box { grid-template-columns: 1fr; }
+      .page-header {
+        padding-top: 50px; /* More space for mobile */
+      }
+      .theme-switch-wrapper {
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%); /* Center the toggle */
       }
     }
-
-    .nemesis {
-      color: #f59e0b;
-      font-weight: 500;
-    }
-    .kryptonite {
-      color: #ef4444;
-      font-weight: 500;
-    }
-    .cakewalk {
-      color: #22c55e;
-      font-weight: 500;
-    }
-
   </style>
 </head>
 <body>
   <div class="container">
     <header class="page-header">
-      <h1 class="page-title">CNO Daily Crazyhouse</h1><p class="page-subtitle">
-        Bi-Weekly Stats Report<br>
-        <span style="font-weight: bold; font-size: 12px; text-decoration: underline;">01-JUN-25 TO 15-JUN-25</span>
+      <div>
+        <h1 class="page-title">CNO Daily Crazyhouse</h1>
+        <p class="page-subtitle">
+          Bi-Weekly Stats Report<br>
+          <span style="font-weight: bold; font-size: 12px; text-decoration: underline;">01-JUN-25 TO 15-JUN-25</span>
+        </p>
         <p class="timestamp">
           Powered By BayorMiller
         </p>
-      </header>
-
+      </div>
+      <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+          <input type="checkbox" id="checkbox" />
+          <div class="slider round"></div>
+        </label>
+      </div>
+    </header>
 
       <div class="card">
         <div class="card-header">
@@ -299,7 +378,7 @@
               <tbody>
                 {% for item in glicko_rankings %}
                 <tr>
-                  <td class="number">{{ loop.index }}</td>
+                  <td class="number">{{ loop.index }}{% if item.rank_change == 'new' %}<span class="trend trend-new">NEW</span>{% elif item.rank_change > 0 %}<span class="trend trend-up">▲{{ item.rank_change }}</span>{% elif item.rank_change < 0 %}<span class="trend trend-down">▼{{ item.rank_change|abs }}</span>{% elif item.rank_change == 0 %}<span class="trend trend-neutral">–</span>{% endif %}</td>
                   <td class="player-name">{{ item.player }}</td>
                   <td class="number"><b>{{ "%.0f"|format(item.rating) }}</b></td>
                   <td class="number">{{ "%.0f"|format(item.rd) }}</td>
@@ -575,6 +654,40 @@
     });
 
     observer.observe(rivalryTableWrapper);
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const themeSwitch = document.getElementById('checkbox');
+    const currentTheme = localStorage.getItem('theme');
+
+    function setTheme(theme) {
+      if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeSwitch.checked = false;
+      } else {
+        document.body.classList.remove('dark-mode');
+        themeSwitch.checked = true;
+      }
+    }
+
+    // Default to dark mode if no theme is set
+    if (currentTheme) {
+      setTheme(currentTheme);
+    } else {
+      setTheme('dark');
+      localStorage.setItem('theme', 'dark');
+    }
+
+    themeSwitch.addEventListener('change', function(event) {
+      if (event.target.checked) {
+        setTheme('light');
+        localStorage.setItem('theme', 'light');
+      } else {
+        setTheme('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    });
   });
 </script>
           </body>
