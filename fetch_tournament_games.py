@@ -5,14 +5,15 @@ import time
 import chess.pgn
 import io
 from datetime import datetime, timezone
+import argparse
 
 # --- CONFIGURATION (Remains the same) ---
 SOURCE_DIR = "tournament_cache"
 DEST_DIR = "detailed_games"
 API_ENDPOINT = "https://lichess.org/api/tournament/{}/games"
 RATE_LIMIT_DELAY_SECONDS = 0
-START_DATE = "2025-06-15"
-END_DATE = "2025-06-29"
+START_DATE = "2025-02-15"
+END_DATE = "2025-07-29"
 
 
 def parse_pgn_stream(pgn_text):
@@ -80,8 +81,9 @@ def parse_pgn_stream(pgn_text):
         games_list.append(
             {
                 "id": headers.get("Site", "").split("/")[-1],
-                "date": headers.get("UTCDate"),
-                "time": headers.get("UTCTime"),
+                "date": headers.get("UTCDate", ""),
+                "time": headers.get("UTCTime", ""),
+                "time_control": headers.get("TimeControl", ""),
                 "winner_name": winner_name,
                 "winner_rating": winner_rating,
                 "loser_name": loser_name,
@@ -110,8 +112,27 @@ def fetch_and_parse_tournament(tournament_id):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Fetch and parse tournament games.")
+    parser.add_argument("tournament_id", nargs='?', default=None, help="The ID of the tournament to fetch.")
+    args = parser.parse_args()
+
     if not os.path.exists(DEST_DIR):
         os.makedirs(DEST_DIR)
+
+    if args.tournament_id:
+        print(f"--- Processing single tournament: {args.tournament_id} ---")
+        dest_filepath = os.path.join(DEST_DIR, f"{args.tournament_id}.json")
+        if os.path.exists(dest_filepath):
+            print(f"Skipping {args.tournament_id}: Detailed game file already exists.")
+            return
+
+        games = fetch_and_parse_tournament(args.tournament_id)
+        if games is not None:
+            with open(dest_filepath, "w") as f:
+                json.dump(games, f, indent=2)
+            print(f"  SUCCESS: Saved {len(games)} games to {dest_filepath}")
+        return
+
     start_dt = datetime.fromisoformat(START_DATE).replace(tzinfo=timezone.utc)
     end_dt = datetime.fromisoformat(END_DATE + "T23:59:59").replace(tzinfo=timezone.utc)
     print(f"--- Processing tournaments between {START_DATE} and {END_DATE} ---")
@@ -150,4 +171,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

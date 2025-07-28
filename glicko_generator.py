@@ -128,8 +128,18 @@ def calculate_new_glicko2_rankings(new_games, player_history):
     }
 
 
+import argparse
+
 def main():
-    current_glicko_data = load_json_file(os.path.join(DATA_DIR, "glicko_rankings.json"))
+    parser = argparse.ArgumentParser(description="Generate Glicko-2 ratings.")
+    parser.add_argument("--no-history", action="store_true", help="Generate ratings from scratch, without using historical data.")
+    args = parser.parse_args()
+
+    if args.no_history:
+        current_glicko_data = {}
+    else:
+        current_glicko_data = load_json_file(os.path.join(DATA_DIR, "glicko_rankings.json"))
+
     all_games = load_all_detailed_games(SOURCE_DIR_GAMES)
     glicko_rankings_all = calculate_new_glicko2_rankings(all_games, current_glicko_data)
     with open(os.path.join("data_output", "glicko_rankings.json"), "w") as f:
