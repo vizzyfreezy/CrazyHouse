@@ -31,8 +31,9 @@ DRAW_PROBABILITY = 0.0001
 # CORE SIMULATION LOGIC (ADVANCED)
 # ==============================================================================
 
-def calculate_h2h_advantage(p1_name, p2_name, h2h_data):
-    p1_wins, p2_wins = h2h_data.get(p1_name, {}).get(p2_name, {}).get('wins', 0), h2h_data.get(p2_name, {}).get(p1_name, {}).get('wins', 0)
+def calculate_h2h_advantage(p1_name, p2_name, h2h_wins_dict):
+    p1_wins = h2h_wins_dict.get((p1_name, p2_name), 0)
+    p2_wins = h2h_wins_dict.get((p2_name, p1_name), 0)
     total_games = p1_wins + p2_wins
     if total_games < 5: return 0.0
     return ((p1_wins / total_games) - 0.5) * 2
@@ -43,10 +44,10 @@ def calculate_style_advantage(p1_stats, p2_stats):
     aggressiveness_adv = (p1_stats['Aggressiveness_norm'] - p2_stats['Aggressiveness_norm']) * 0.5
     return (speed_adv + consistency_adv + aggressiveness_adv) / 2.5
 
-def simulate_game_advanced(p1_stats, p2_stats, h2h_data):
+def simulate_game_advanced(p1_name, p2_name, p1_stats, p2_stats, h2h_data):
     if np.random.rand() < DRAW_PROBABILITY: return 0.5, 0.5
     base_prob_p1 = 1 / (1 + 10**((p2_stats['Current Rating'] - p1_stats['Current Rating']) / 400))
-    h2h_adv = calculate_h2h_advantage(p1_stats.name, p2_stats.name, h2h_data)
+    h2h_adv = calculate_h2h_advantage(p1_name, p2_name, h2h_data)
     style_adv = calculate_style_advantage(p1_stats, p2_stats)
     matchup_score_p1 = (base_prob_p1 - 0.5) * WEIGHT_RATING + h2h_adv * WEIGHT_H2H + style_adv * WEIGHT_STYLE
     final_prob_p1 = np.clip(matchup_score_p1 + 0.5, 0.05, 0.95)
@@ -57,28 +58,37 @@ def estimate_game_duration(base_time_seconds):
     return random.uniform(min_duration, max_duration)
 
 def find_pairings(player_states, teams):
-    pairings, player_to_team = [], {player: name for name, players in teams.items() for player in players}
-    waiting_players = [p for p, s in player_states.items() if s['status'] == 'waiting']
-    random.shuffle(waiting_players)
-    waiting_players.sort(key=lambda p: player_states[p]['score'], reverse=True)
-    paired_players = set()
-    for p1_name in waiting_players:
-        if p1_name in paired_players: continue
-        p1_team = player_to_team[p1_name]
-        best_opponent = None
-        for p2_name in waiting_players:
-            if p2_name in paired_players or p1_name == p2_name: continue
-            if player_to_team[p2_name] == p1_team: continue
-            if p2_name in player_states[p1_name]['recent_opponents']: continue
-            best_opponent = p2_name
-            break
-        if best_opponent:
-            pairings.append((p1_name, best_opponent))
-            paired_players.add(p1_name)
-            paired_players.add(best_opponent)
+    player_to_team = {player: name for name, players in teams.items() for player in players}
+    
+    # Separate players by team and sort by score
+    team_waiting_players = {team: sorted([p for p in players if player_states[p]['status'] == 'waiting'], 
+                                        key=lambda p: player_states[p]['score'], reverse=True) 
+                          for team, players in teams.items()}
+
+    pairings, paired_players = [], set()
+    
+    # Assume two teams for pairing logic
+    team1_name, team2_name = list(teams.keys())
+    team1_players = team_waiting_players[team1_name]
+    team2_players = team_waiting_players[team2_name]
+    
+    # Iterate through the smaller team and find opponents in the larger team
+    if len(team1_players) > len(team2_players):
+        team1_players, team2_players = team2_players, team1_players
+
+    for p1 in team1_players:
+        if p1 in paired_players: continue
+        for p2 in team2_players:
+            if p2 in paired_players: continue
+            if p2 not in player_states[p1]['recent_opponents']:
+                pairings.append((p1, p2))
+                paired_players.add(p1)
+                paired_players.add(p2)
+                break
+            
     return pairings
 
-def run_single_arena_simulation(teams, player_data, h2h_data, duration_seconds, time_control_seconds):
+def run_single_arena_simulation(teams, player_data_dict, h2h_data, duration_seconds, time_control_seconds):
     """Runs one full, dynamic Arena, returning detailed player performance stats."""
     all_players = [p for team_list in teams.values() for p in team_list]
     player_states = {p: {'score': 0, 'status': 'waiting', 'recent_opponents': [], 'streak': 0,
@@ -99,8 +109,8 @@ def run_single_arena_simulation(teams, player_data, h2h_data, duration_seconds, 
         
         if current_time >= duration_seconds: break
 
-        p1_stats, p2_stats = player_data.loc[p1_finished], player_data.loc[p2_finished]
-        p1_score, p2_score = simulate_game_advanced(p1_stats, p2_stats, h2h_data)
+        p1_stats, p2_stats = player_data_dict[p1_finished], player_data_dict[p2_finished]
+        p1_score, p2_score = simulate_game_advanced(p1_finished, p2_finished, p1_stats, p2_stats, h2h_data)
         
         # --- SCORE SHEET AND OPPONENT TRACKING ---
         player_states[p1_finished]['opponent_list'].append(p2_finished)
@@ -147,38 +157,22 @@ def run_single_arena_simulation(teams, player_data, h2h_data, duration_seconds, 
 
     return pd.Series(final_team_scores), final_player_details
 
-def build_h2h_data_from_games(games_df):
-    # Step 1: Count wins per (winner, loser) pair
-    h2h_pairs = games_df.groupby(['winner_name', 'loser_name']).size()
-    
-    # Step 2: Convert to a dictionary for fast lookup
-    h2h_dict = h2h_pairs.to_dict()  # key = (winner_name, loser_name), value = win count
-
-    # Step 3: Get all players
-    all_players = pd.unique(games_df[['winner_name', 'loser_name']].values.ravel())
-
-    # Step 4: Build H2H structure
-    h2h_data = {}
-    for p1 in all_players:
-        h2h_data[p1] = {}
-        for p2 in all_players:
-            if p1 == p2: continue
-            wins = h2h_dict.get((p1, p2), 0)
-            losses = h2h_dict.get((p2, p1), 0)
-            h2h_data[p1][p2] = {'wins': wins, 'losses': losses}
-    
-    return h2h_data
+def build_h2h_wins_dict_from_games(games_df):
+    """Creates a dictionary mapping (winner, loser) to win counts for fast H2H lookup."""
+    return games_df.groupby(['winner_name', 'loser_name']).size().to_dict()
 def run_simulation_wrapper(_):
     return run_single_arena_simulation(
         TEAMS,
-        player_data_df,
-        h2h_data,
+        player_data_dict, 
+        h2h_wins_dict, # Pass the new H2H dictionary
         TOURNAMENT_DURATION_MINUTES * 60,
         TIME_CONTROL_SECONDS
     )
 # ==============================================================================
 # MAIN EXECUTION BLOCK
 # ==============================================================================
+import os
+
 if __name__ == "__main__":
 
     try:
@@ -194,10 +188,18 @@ if __name__ == "__main__":
         print(f"\n!!! ERROR: The following players are missing: {missing_players}")
         exit()
 
-    h2h_data = build_h2h_data_from_games(games_df)
+    h2h_wins_dict = build_h2h_wins_dict_from_games(games_df)
+    player_data_dict = player_data_df.to_dict('index')
+
     print(f"\n--- Starting Dynamic Arena Team Battle Simulation (with Score Sheets) ---")
 
-    NUM_PROCESSES = 7
+    # Dynamically set the number of processes
+    try:
+        NUM_PROCESSES = os.cpu_count()
+        print(f"Using {NUM_PROCESSES} CPU cores for parallel processing.")
+    except NotImplementedError:
+        NUM_PROCESSES = 4 # Fallback value
+        print("Could not determine number of CPUs, falling back to 4.")
 
     with Pool(processes=NUM_PROCESSES) as pool:
         results = list(tqdm(pool.imap(run_simulation_wrapper, range(NUM_SIMULATIONS)), total=NUM_SIMULATIONS))
