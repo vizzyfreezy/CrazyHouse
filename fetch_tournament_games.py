@@ -18,66 +18,59 @@ END_DATE = "2025-07-29"
 
 def parse_pgn_stream(pgn_text):
     """
-    Parses a string containing multiple PGN games.
-    THIS FUNCTION CONTAINS THE DEFINITIVE FIX.
+    Parses a string containing multiple PGN games and now includes
+    the color of the winning and losing players.
     """
     pgn_file_stream = io.StringIO(pgn_text)
     games_list = []
 
     while True:
-        # We still use read_game() because it's excellent at isolating one game
-        # block and parsing its headers, which is a complex task to do manually.
         game = chess.pgn.read_game(pgn_file_stream)
         if game is None:
             break
 
         headers = game.headers
         result = headers.get("Result", "*")
+        
+        # Get the names of the White and Black players
+        white_player = headers.get("White")
+        black_player = headers.get("Black")
+        white_rating = int(headers.get("WhiteElo"))
+        black_rating = int(headers.get("BlackElo"))
 
+        # --- THE KEY CHANGE IS HERE ---
+        # Determine winner/loser and also capture their color for that game.
         if result == "1-0":
-            winner_name = headers.get("White")
-            winner_rating = int(headers.get("WhiteElo"))
-            loser_name = headers.get("Black")
-            loser_rating = int(headers.get("BlackElo"))
+            winner_name = white_player
+            winner_rating = white_rating
+            winner_color = "White" # Winner played White
+            loser_name = black_player
+            loser_rating = black_rating
+            loser_color = "Black" # Loser played Black
         elif result == "0-1":
-            winner_name = headers.get("Black")
-            winner_rating = int(headers.get("BlackElo"))
-            loser_name = headers.get("White")
-            loser_rating = int(headers.get("WhiteElo"))
+            winner_name = black_player
+            winner_rating = black_rating
+            winner_color = "Black" # Winner played Black
+            loser_name = white_player
+            loser_rating = white_rating
+            loser_color = "White" # Loser played White
         else:
+            # Skip draws or unfinished games
             continue
 
-        # ======================================================================
-        # --- THE FIX: MANUAL MOVE COUNTING ---
-        # We convert the game object back to its raw PGN string, which is easy to work with.
-        game_string = str(game)
-
-        # The moves always come after a double newline that separates them from the headers.
-        # We find that spot and take everything after it.
+        # Manual move counting logic (remains the same)
         try:
-            moves_section = game_string.split("\n\n", 1)[1]
+            moves_section = str(game).split("\n\n", 1)[1]
         except IndexError:
-            # This happens if a game has headers but no moves.
             moves_section = ""
-
-        # We split the move text into tokens by spaces.
-        # e.g., "1. d4 d5 0-1" becomes ["1.", "d4", "d5", "0-1"]
         tokens = moves_section.split()
-
-        # We now filter this list to ONLY include actual move tokens.
-        # We exclude move numbers (like "1.") and results.
         move_tokens = [
-            token
-            for token in tokens
+            token for token in tokens
             if not token.endswith(".") and token not in ["1-0", "0-1", "1/2-1/2", "*"]
         ]
+        move_count = (len(move_tokens) + 1) // 2
 
-        # The number of tokens is the number of half-moves (plies).
-        # We can now reliably calculate the full move count.
-        num_plies = len(move_tokens)
-        move_count = (num_plies + 1) // 2
-        # ======================================================================
-
+        # --- Add the new color fields to the output ---
         games_list.append(
             {
                 "id": headers.get("Site", "").split("/")[-1],
@@ -86,16 +79,16 @@ def parse_pgn_stream(pgn_text):
                 "time_control": headers.get("TimeControl", ""),
                 "winner_name": winner_name,
                 "winner_rating": winner_rating,
+                "winner_color": winner_color, # New field
                 "loser_name": loser_name,
                 "loser_rating": loser_rating,
+                "loser_color": loser_color,   # New field
                 "moves": move_count,
                 "status": headers.get("Termination", "Unknown"),
             }
         )
 
     return games_list
-
-
 # The rest of the file remains exactly the same
 def fetch_and_parse_tournament(tournament_id):
     url = API_ENDPOINT.format(tournament_id)

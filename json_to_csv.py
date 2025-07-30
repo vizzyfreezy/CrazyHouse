@@ -36,8 +36,10 @@ def main():
         "time_control",
         "winner_name",
         "winner_rating",
+        "winner_color",
         "loser_name",
         "loser_rating",
+        "loser_color",
         "moves",
         "status",
     ]

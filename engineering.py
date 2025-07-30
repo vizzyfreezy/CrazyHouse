@@ -176,9 +176,14 @@ def create_player_profiles(games_df, z_scores_df, arena_df, qualified_players):
     report_df['Avg Points Per Game'] = profiles_df['avg_points_per_game']
     report_df['Avg Games (Stamina)'] = profiles_df['avg_games_per_tournament']
     report_df['Giant-Slayer Rate'] = profiles_df['giant_slayer_rate']
+    report_df['Berserk Win Rate'] = profiles_df['berserk_win_rate']
     report_df['Favorite Opponents'] = profiles_df['Favorite Opponents']
     report_df['Nemesis Players'] = profiles_df['Nemesis Players']
     report_df['True Avg Performance'] = profiles_df['true_avg_performance']
+    report_df['Consistency_norm'] = 1 - profiles_df['norm_z_score_volatility']
+    report_df['Speed_norm'] = profiles_df['norm_time_pressure_factor']
+    report_df['Aggressiveness_norm'] = profiles_df['norm_berserk_win_rate']
+
 
     return report_df
 
@@ -230,7 +235,7 @@ if __name__ == "__main__":
         final_columns = [
             'Current Rating', 'True Avg Performance', 'Consistency', 'Speed', 'Aggressiveness', 
             'Avg Points Per Game', 'Avg Games (Stamina)', 'Giant-Slayer Rate', 
-            'Favorite Opponents', 'Nemesis Players'
+            'Favorite Opponents', 'Nemesis Players','Berserk Win Rate'
         ]
         final_columns = [col for col in final_columns if col in report_df.columns]
         print(report_df[final_columns].sort_values(by='True Avg Performance', ascending=False).round(2))
@@ -251,7 +256,7 @@ if __name__ == "__main__":
         
         ranked_display_cols = [
             'Suitability Score', 'True Avg Performance', 'Consistency', 'Speed', 'Aggressiveness', 
-            'Avg Points Per Game', 'Avg Games (Stamina)', 'Giant-Slayer Rate'
+            'Avg Points Per Game', 'Avg Games (Stamina)', 'Giant-Slayer Rate','Berserk Win Rate'
         ]
         ranked_display_cols = [col for col in ranked_display_cols if col in ranked_report.columns]
         print(ranked_report[ranked_display_cols].head(15).round(2))
@@ -259,6 +264,7 @@ if __name__ == "__main__":
         
         print("\nSaving final player data to 'player_features.csv' for simulation...")
         report_df.to_csv('player_features.csv')
+        games_df.to_csv('all_games.csv', index=False)
         print("Save complete.")
 
     else:
