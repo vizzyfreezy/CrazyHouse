@@ -8,23 +8,15 @@ from multiprocessing import Pool
 # ARENA TEAM BATTLE SIMULATION CONFIGURATION - EDIT THIS SECTION
 # ==============================================================================
 TEAMS = {
-    "Team A": [
-        'bayormiller_cno',
-        'anthonyoja',
-        'zlater007',
-        'vegakov',
-        'ovokodigood',
-        'adet2510',
-        'spicypearl8'
+    "my_team": [
+        "bayormiller_cno", "warlock_dabee", "crazybugg", "anthonyoja",
+        "zlater007", "nevagivup", "noblechuks_cno", "adet2510",
+        "trappatoni", "tommybrooks", "b4elma", "spicypearl8"
     ],
-    "Team B": [
-        'hardeywale',
-        'ageless_2',
-        'kirekachesschamp',
-        'bb_thegame',
-        'patzernoblechuks',
-        'nevagivup',
-        'mini_verse'
+    "opponent_team": [
+        "hardeywale", "zgm-giantkiller", "kirekachesschamp", "ageless_2",
+        "ezengwori", "bb_thegame", "vegakov", "ovokodigood",
+        "martins177", "patzernoblechuks", "lexzero2", "overgiftedlight"
     ]
 }
 TOURNAMENT_DURATION_MINUTES = 90
@@ -221,6 +213,37 @@ if __name__ == "__main__":
 
     team_results_df = pd.DataFrame(all_team_results)
     player_scores_df = pd.DataFrame(all_player_scores)
+    
+    margin_records = []
+    
+    for i, result in enumerate(all_team_results):
+        team_names = result.index.tolist()
+        if len(team_names) != 2:
+            continue
+    
+        team_a, team_b = team_names
+        score_a, score_b = result[team_a], result[team_b]
+        margin = abs(score_a - score_b)
+        winner = team_a if score_a > score_b else team_b
+    
+        margin_records.append({
+            'index': i,
+            'winner': winner,
+            'loser': team_b if winner == team_a else team_a,
+            'margin': margin,
+            'score_winner': max(score_a, score_b),
+            'score_loser': min(score_a, score_b)
+        })
+    
+    margins_df = pd.DataFrame(margin_records)
+    
+    for team in TEAMS.keys():
+        biggest_win = margins_df[margins_df['winner'] == team].sort_values(by='margin', ascending=False).head(1)
+        if not biggest_win.empty:
+            row = biggest_win.iloc[0]
+            print(f"\n🔹 Highest-margin win for {team}:")
+            print(f"  Simulation #{row['index']} — {row['score_winner']} vs {row['score_loser']} (margin: {row['margin']})")
+# -------------------------------------
 
     print("\n--- Simulation Complete. Analyzing Results... ---")
 

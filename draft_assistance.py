@@ -3,8 +3,11 @@ import numpy as np
 import itertools
 from tqdm import tqdm
 import random
+import subprocess 
+from simulate_teambattle import  build_h2h_data_from_games
 from multiprocessing import Pool, cpu_count
 cpu_count=8
+
 # ==============================================================================
 # DRAFT ASSISTANT CONFIGURATION - EDIT THIS SECTION
 # ==============================================================================
@@ -92,19 +95,6 @@ def find_best_pick_parallel(my_team, opponent_team, player_pool, player_data, h2
         
     return sorted(candidate_scores.items(), key=lambda item: item[1], reverse=True)
 
-def build_h2h_data_from_games(games_df):
-    h2h_groups = games_df.groupby(['winner_name', 'loser_name']).size().reset_index(name='wins')
-    h2h_data = {}
-    all_players = pd.concat([games_df['winner_name'], games_df['loser_name']]).unique()
-    for p1 in all_players:
-        h2h_data[p1] = {}
-        for p2 in all_players:
-            if p1 == p2: continue
-            wins = h2h_groups[(h2h_groups['winner_name'] == p1) & (h2h_groups['loser_name'] == p2)]['wins'].sum()
-            losses = h2h_groups[(h2h_groups['winner_name'] == p2) & (h2h_groups['loser_name'] == p1)]['wins'].sum()
-            h2h_data[p1][p2] = {'wins': wins, 'losses': losses}
-    return h2h_data
-
 def display_draft_state(my_team, opponent_team, player_pool):
     """Prints the current state of the draft."""
     print("\n" + "="*50)
@@ -114,6 +104,21 @@ def display_draft_state(my_team, opponent_team, player_pool):
     print(f"Opponent's Team ({len(opponent_team)}): {', '.join(opponent_team) if opponent_team else 'None'}")
     print(f"Players Remaining ({len(player_pool)}): {', '.join(player_pool[:5])}...")
     print("="*50 + "\n")
+##Interactive Selection
+def fzf_select(options):
+    """Display a terminal-based selection box using fzf."""
+    try:
+        result = subprocess.run(
+            ['fzf'], input='\n'.join(options), text=True, capture_output=True
+        )
+        return result.stdout.strip()
+    except FileNotFoundError:
+        print("fzf is not installed. Please run: pkg install fzf")
+        exit()
+
+def extract_player_name(line):
+    """Extract player name from line that may contain scores."""
+    return line.split()[0].lower()
 
 # ==============================================================================
 # MAIN EXECUTION BLOCK
@@ -145,32 +150,32 @@ if __name__ == "__main__":
         
         if choice == '1':
             print("\n--- RUNNING ANALYSIS FOR YOUR PICK (IN PARALLEL) ---")
-            # Call the new parallel function
             recommendations = find_best_pick_parallel(my_team, opponent_team, player_pool, player_data_df, h2h_data)
             
-            print("\n--- TOP 5 RECOMMENDATIONS ---")
-            for i, (player, score) in enumerate(recommendations[:5]):
-                max_score = len(opponent_team) * GAMES_PER_MATCHUP if opponent_team else 'N/A'
-                print(f"{i+1}. {player.upper():<20} (Predicted Score: {score:.2f} / {max_score})")
+            # Build fzf options
+            print("\n--- SELECT FROM RECOMMENDATIONS OR FULL POOL ---")
+            fzf_options = [
+                f"{player}  (score: {score:.2f})" for player, score in recommendations[:5]
+            ] + ['────────────'] + player_pool
             
-            while True:
-                my_pick = input("\nWho are you picking from the list?: ").lower().strip()
-                if my_pick in player_pool:
-                    my_team.append(my_pick)
-                    player_pool.remove(my_pick)
-                    print(f"\n>> You have drafted {my_pick.upper()}.")
-                    break
-                else: print(">> Invalid player. Please pick a player from the pool.")
+            selected_line = fzf_select(fzf_options)
+            selected_player = extract_player_name(selected_line)
 
+            if selected_player in player_pool:
+                my_team.append(selected_player)
+                player_pool.remove(selected_player)
+                print(f"\n>> You have drafted {selected_player.upper()}.")
+            else:
+                print(">> Invalid pick or cancelled.")
+        
         elif choice == '2':
-            while True:
-                opponent_pick = input("Who did the opponent pick?: ").lower().strip()
-                if opponent_pick in player_pool:
-                    opponent_team.append(opponent_pick)
-                    player_pool.remove(opponent_pick)
-                    print(f"\n>> Opponent has drafted {opponent_pick.upper()}.")
-                    break
-                else: print(">> Invalid player. Please pick a player from the pool.")
+            opponent_pick = fzf_select(player_pool)
+            if opponent_pick in player_pool:
+                opponent_team.append(opponent_pick)
+                player_pool.remove(opponent_pick)
+                print(f"\n>> Opponent has drafted {opponent_pick.upper()}.")
+            else:
+                print(">> Invalid pick or cancelled.")
         
         elif choice.lower() in ['exit', 'quit']:
             break
