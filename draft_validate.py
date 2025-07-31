@@ -11,11 +11,13 @@ from simulate_teambattle import (
     calculate_h2h_advantage,
     calculate_style_advantage,
     simulate_game_advanced,
+    run_single_arena_simulation, # New: Import the full arena simulation
     build_h2h_wins_dict_from_games, # Corrected import
     WEIGHT_RATING, WEIGHT_H2H, WEIGHT_STYLE, DRAW_PROBABILITY,
     INFAMY_RATING_THRESHOLD, DEFAULT_CLIP_RANGE,
     INFAMOUS_CLIP_RANGE_TIGHT, INFAMOUS_CLIP_RANGE_VERY_TIGHT,
-    RATING_GAP_THRESHOLD_1, RATING_GAP_THRESHOLD_2
+    RATING_GAP_THRESHOLD_1, RATING_GAP_THRESHOLD_2,
+    TOURNAMENT_DURATION_MINUTES, TIME_CONTROL_SECONDS # New: Import constants
 )
 
 # ==============================================================================
@@ -74,15 +76,15 @@ def build_h2h_data_from_games(games_df):
     return build_h2h_wins_dict_from_games(games_df)
 
 def run_final_showdown_simulation(teams, player_data_dict, h2h_wins_dict):
-    team_scores = {team_name: 0.0 for team_name in teams}
-    for p1_name, p2_name in itertools.product(teams['Smart Team'], teams['Random Team']):
-        for _ in range(GAMES_PER_MATCHUP):
-            p1_stats = player_data_dict[p1_name]
-            p2_stats = player_data_dict[p2_name]
-            p1_score, p2_score = simulate_game_advanced(p1_name, p2_name, p1_stats, p2_stats, h2h_wins_dict)
-            team_scores['Smart Team'] += p1_score
-            team_scores['Random Team'] += p2_score
-    return pd.Series(team_scores)
+    # Use the full arena simulation logic from simulate_teambattle.py
+    team_scores, _ = run_single_arena_simulation(
+        teams,
+        player_data_dict,
+        h2h_wins_dict,
+        TOURNAMENT_DURATION_MINUTES * 60, # Convert to seconds
+        TIME_CONTROL_SECONDS
+    )
+    return team_scores
 
 # ==============================================================================
 # MAIN EXECUTION BLOCK
@@ -140,10 +142,18 @@ if __name__ == "__main__":
     print(f"\n--- Running Final Showdown ({FINAL_SHOWDOWN_SIMULATIONS} simulations) ---")
     final_teams = {"Smart Team": smart_team, "Random Team": random_team}
     
+    # Prepare arguments for parallel execution
+    # We need a wrapper function because Pool.imap expects a single iterable argument
+    def showdown_wrapper(_):
+        return run_final_showdown_simulation(final_teams, player_data_dict, h2h_wins_dict)
+
+    num_processes = os.cpu_count() if os.cpu_count() else 4 # Fallback to 4 if not detectable
+    print(f"Using {num_processes} CPU cores for showdown simulations.")
+
     all_results = []
-    for _ in tqdm(range(FINAL_SHOWDOWN_SIMULATIONS), desc="Running Showdown"):
-        final_scores = run_final_showdown_simulation(final_teams, player_data_dict, h2h_wins_dict)
-        all_results.append(final_scores)
+    with Pool(processes=num_processes) as pool:
+        for result in tqdm(pool.imap(showdown_wrapper, range(FINAL_SHOWDOWN_SIMULATIONS)), total=FINAL_SHOWDOWN_SIMULATIONS, desc="Running Showdown"):
+            all_results.append(result)
     
     results_df = pd.DataFrame(all_results)
     
