@@ -4,9 +4,20 @@ import itertools
 from tqdm import tqdm
 import random
 import subprocess 
-from simulate_teambattle import  build_h2h_data_from_games
-from multiprocessing import Pool, cpu_count
-cpu_count=8
+from multiprocessing import Pool
+import os
+
+# Import all necessary simulation logic and constants from simulate_teambattle.py
+from simulate_teambattle import (
+    calculate_h2h_advantage,
+    calculate_style_advantage,
+    simulate_game_advanced,
+    build_h2h_wins_dict_from_games, # Corrected import
+    WEIGHT_RATING, WEIGHT_H2H, WEIGHT_STYLE, DRAW_PROBABILITY,
+    INFAMY_RATING_THRESHOLD, DEFAULT_CLIP_RANGE,
+    INFAMOUS_CLIP_RANGE_TIGHT, INFAMOUS_CLIP_RANGE_VERY_TIGHT,
+    RATING_GAP_THRESHOLD_1, RATING_GAP_THRESHOLD_2
+)
 
 # ==============================================================================
 # DRAFT ASSISTANT CONFIGURATION - EDIT THIS SECTION
@@ -18,36 +29,11 @@ PLAYER_POOL = [
     'kirekachesschamp', 'bb_thegame', 'martins177', 'lexzero2', 'overgiftedlight', 'nevagivup'
 ]
 SIMULATIONS_PER_CANDIDATE = 500
-WEIGHT_RATING = 0.50
-WEIGHT_H2H = 0.45
-WEIGHT_STYLE = 0.05
-DRAW_PROBABILITY = 0.03
 GAMES_PER_MATCHUP = 2
 
 # ==============================================================================
 # CORE SIMULATION & ANALYSIS LOGIC
 # ==============================================================================
-
-def calculate_h2h_advantage(p1_name, p2_name, h2h_data):
-    p1_wins, p2_wins = h2h_data.get(p1_name, {}).get(p2_name, {}).get('wins', 0), h2h_data.get(p2_name, {}).get(p1_name, {}).get('wins', 0)
-    total_games = p1_wins + p2_wins
-    if total_games < 5: return 0.0
-    return ((p1_wins / total_games) - 0.5) * 2
-
-def calculate_style_advantage(p1_stats, p2_stats):
-    speed_adv = p1_stats['Speed_norm'] - p2_stats['Speed_norm']
-    consistency_adv = p1_stats['Consistency_norm'] - p2_stats['Consistency_norm']
-    aggressiveness_adv = (p1_stats['Aggressiveness_norm'] - p2_stats['Aggressiveness_norm']) * 0.5
-    return (speed_adv + consistency_adv + aggressiveness_adv) / 2.5
-
-def simulate_game_advanced(p1_stats, p2_stats, h2h_data):
-    if np.random.rand() < DRAW_PROBABILITY: return 0.5, 0.5
-    base_prob_p1 = 1 / (1 + 10**((p2_stats['Current Rating'] - p1_stats['Current Rating']) / 400))
-    h2h_adv = calculate_h2h_advantage(p1_stats.name, p2_stats.name, h2h_data)
-    style_adv = calculate_style_advantage(p1_stats, p2_stats)
-    matchup_score_p1 = (base_prob_p1 - 0.5) * WEIGHT_RATING + h2h_adv * WEIGHT_H2H + style_adv * WEIGHT_STYLE
-    final_prob_p1 = np.clip(matchup_score_p1 + 0.5, 0.05, 0.95)
-    return (1.0, 0.0) if np.random.rand() < final_prob_p1 else (0.0, 1.0)
 
 def run_mini_simulation(my_team, opponent_team, player_data, h2h_data):
     if not opponent_team: return {p: 0 for p in my_team}
@@ -56,7 +42,10 @@ def run_mini_simulation(my_team, opponent_team, player_data, h2h_data):
         player_scores = {player: 0.0 for player in my_team + opponent_team}
         for p1_name, p2_name in itertools.product(my_team, opponent_team):
             for _ in range(GAMES_PER_MATCHUP):
-                p1_score, p2_score = simulate_game_advanced(player_data.loc[p1_name], player_data.loc[p2_name], h2h_data)
+                # Pass player_data_dict and h2h_wins_dict directly to simulate_game_advanced
+                p1_stats = player_data[p1_name] # Access as dictionary
+                p2_stats = player_data[p2_name] # Access as dictionary
+                p1_score, p2_score = simulate_game_advanced(p1_name, p2_name, p1_stats, p2_stats, h2h_data)
                 player_scores[p1_name] += p1_score
                 player_scores[p2_name] += p2_score
         all_player_results.append(pd.Series(player_scores))
@@ -68,23 +57,25 @@ def analyze_candidate_wrapper(args):
     A simple wrapper to allow the main analysis function to be called by the multiprocessing Pool.
     It unpacks the arguments and runs the simulation for a single candidate.
     """
-    candidate, my_team, opponent_team, player_data, h2h_data = args
+    candidate, my_team, opponent_team, player_data_dict, h2h_wins_dict = args
     test_my_team = my_team + [candidate]
-    avg_scores = run_mini_simulation(test_my_team, opponent_team, player_data, h2h_data)
+    avg_scores = run_mini_simulation(test_my_team, opponent_team, player_data_dict, h2h_wins_dict)
     return candidate, avg_scores.get(candidate, 0)
 
-def find_best_pick_parallel(my_team, opponent_team, player_pool, player_data, h2h_data):
+def find_best_pick_parallel(my_team, opponent_team, player_pool, player_data_dict, h2h_wins_dict):
     """
     Analyzes the player pool in parallel to find the optimal pick.
     """
-    global cpu_count
     # Prepare the arguments for each parallel task
-    tasks = [(candidate, my_team, opponent_team, player_data, h2h_data) for candidate in player_pool]
+    tasks = [(candidate, my_team, opponent_team, player_data_dict, h2h_wins_dict) for candidate in player_pool]
     
     candidate_scores = {}
     
-    # Create a pool of worker processes that uses all available CPU cores
-    with Pool(processes=cpu_count) as p:
+    # Use all available CPU cores
+    num_processes = os.cpu_count() if os.cpu_count() else 4 # Fallback to 4 if not detectable
+    print(f"Using {num_processes} CPU cores for parallel analysis.")
+
+    with Pool(processes=num_processes) as p:
         # Use tqdm to create a progress bar for the parallel processing
         # p.imap_unordered processes tasks in parallel and yields results as they complete
         results = list(tqdm(p.imap_unordered(analyze_candidate_wrapper, tasks), total=len(tasks), desc="Analyzing Candidates (Parallel)"))
@@ -142,7 +133,7 @@ if __name__ == "__main__":
         print(f"\n!!! ERROR: The following players in your POOL are not in the data file: {missing_players}")
         exit()
         
-    h2h_data = build_h2h_data_from_games(games_df)
+    h2h_wins_dict = build_h2h_wins_dict_from_games(games_df)
     
     while player_pool:
         display_draft_state(my_team, opponent_team, player_pool)
@@ -150,7 +141,8 @@ if __name__ == "__main__":
         
         if choice == '1':
             print("\n--- RUNNING ANALYSIS FOR YOUR PICK (IN PARALLEL) ---")
-            recommendations = find_best_pick_parallel(my_team, opponent_team, player_pool, player_data_df, h2h_data)
+            # Pass player_data_df as a dictionary to run_mini_simulation
+            recommendations = find_best_pick_parallel(my_team, opponent_team, player_pool, player_data_df.to_dict('index'), h2h_wins_dict)
             
             # Build fzf options
             print("\n--- SELECT FROM RECOMMENDATIONS OR FULL POOL ---")

@@ -22,10 +22,20 @@ TEAMS = {
 TOURNAMENT_DURATION_MINUTES = 90
 NUM_SIMULATIONS = 1000
 TIME_CONTROL_SECONDS = 120
-WEIGHT_RATING = 0.50
-WEIGHT_H2H = 0.45
-WEIGHT_STYLE = 0.05
-DRAW_PROBABILITY = 0.0001
+WEIGHT_RATING = 0.60
+WEIGHT_H2H = 0.27
+WEIGHT_STYLE = 0.13
+DRAW_PROBABILITY = 0.00001 # Very low, as per Crazyhouse game characteristics
+INFAMY_RATING_THRESHOLD = 2200 # Define threshold for "infamous" players
+
+# Clipping ranges for probabilities
+DEFAULT_CLIP_RANGE = (0.05, 0.95)
+INFAMOUS_CLIP_RANGE_TIGHT = (0.35, 0.65) # Tighter for infamous players with a moderate rating gap
+INFAMOUS_CLIP_RANGE_VERY_TIGHT = (0.45, 0.55) # Even tighter for infamous players with a very small rating gap
+
+# Rating gap thresholds for infamous players
+RATING_GAP_THRESHOLD_1 = 50 # e.g., if gap < 50, use TIGHT
+RATING_GAP_THRESHOLD_2 = 20 # e.g., if gap < 20, use VERY_TIGHT
 
 # ==============================================================================
 # CORE SIMULATION LOGIC (ADVANCED)
@@ -35,7 +45,7 @@ def calculate_h2h_advantage(p1_name, p2_name, h2h_wins_dict):
     p1_wins = h2h_wins_dict.get((p1_name, p2_name), 0)
     p2_wins = h2h_wins_dict.get((p2_name, p1_name), 0)
     total_games = p1_wins + p2_wins
-    if total_games < 5: return 0.0
+    if total_games < 10: return 0.0
     return ((p1_wins / total_games) - 0.5) * 2
 
 def calculate_style_advantage(p1_stats, p2_stats):
@@ -50,7 +60,19 @@ def simulate_game_advanced(p1_name, p2_name, p1_stats, p2_stats, h2h_data):
     h2h_adv = calculate_h2h_advantage(p1_name, p2_name, h2h_data)
     style_adv = calculate_style_advantage(p1_stats, p2_stats)
     matchup_score_p1 = (base_prob_p1 - 0.5) * WEIGHT_RATING + h2h_adv * WEIGHT_H2H + style_adv * WEIGHT_STYLE
-    final_prob_p1 = np.clip(matchup_score_p1 + 0.5, 0.05, 0.95)
+
+    # Dynamic clipping based on infamy and rating gap
+    lower_clip, upper_clip = DEFAULT_CLIP_RANGE
+
+    if p1_stats['Current Rating'] >= INFAMY_RATING_THRESHOLD and \
+       p2_stats['Current Rating'] >= INFAMY_RATING_THRESHOLD:
+        rating_gap = abs(p1_stats['Current Rating'] - p2_stats['Current Rating'])
+        if rating_gap < RATING_GAP_THRESHOLD_2:
+            lower_clip, upper_clip = INFAMOUS_CLIP_RANGE_VERY_TIGHT
+        elif rating_gap < RATING_GAP_THRESHOLD_1:
+            lower_clip, upper_clip = INFAMOUS_CLIP_RANGE_TIGHT
+
+    final_prob_p1 = np.clip(matchup_score_p1 + 0.5, lower_clip, upper_clip)
     return (1.0, 0.0) if np.random.rand() < final_prob_p1 else (0.0, 1.0)
 
 def estimate_game_duration(base_time_seconds):
