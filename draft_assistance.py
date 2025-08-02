@@ -65,7 +65,16 @@ def analyze_candidate_wrapper(args):
 def find_best_pick_parallel(my_team, opponent_team, player_pool, player_data_dict, h2h_wins_dict):
     """
     Analyzes the player pool in parallel to find the optimal pick.
+    If opponent_team is empty, recommends based on rating.
     """
+    if not opponent_team:
+        # If no opponent team, recommend based on raw rating
+        candidate_ratings = []
+        for candidate in player_pool:
+            rating = player_data_dict[candidate]['Current Rating']
+            candidate_ratings.append((candidate, rating))
+        return sorted(candidate_ratings, key=lambda item: item[1], reverse=True)
+
     # Prepare the arguments for each parallel task
     tasks = [(candidate, my_team, opponent_team, player_data_dict, h2h_wins_dict) for candidate in player_pool]
     

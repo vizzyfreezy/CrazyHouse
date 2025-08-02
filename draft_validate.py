@@ -31,6 +31,7 @@ PLAYER_POOL = [
     'ezengwori', 'ageless_2', 'crazybugg', 'warlock_dabee', 'hardeywale', 'vegakov',
     'kirekachesschamp', 'bb_thegame', 'martins177', 'lexzero2', 'overgiftedlight', 'nevagivup'
 ]
+team_owners=["bayormiller_cno","hardeywale"]
 
 # --- Simulation Parameters for the Final Showdown ---
 # High number for a confident validation result.
@@ -70,7 +71,8 @@ def find_best_pick_parallel(my_team, opponent_team, player_pool, player_data_dic
     num_processes = os.cpu_count() if os.cpu_count() else 4 # Fallback to 4 if not detectable
     with Pool(processes=num_processes) as p:
         results = list(tqdm(p.imap_unordered(analyze_candidate_wrapper, tasks), total=len(tasks), desc="Analyzing Pick", leave=False))
-    return sorted(results, key=lambda item: item[1], reverse=True)[0][0]
+    result=sorted(results, key=lambda item: item[1], reverse=True)
+    return result[0][0]
 
 def build_h2h_data_from_games(games_df):
     return build_h2h_wins_dict_from_games(games_df)
@@ -115,21 +117,31 @@ if __name__ == "__main__":
     print("\n--- Starting Automated Draft: Smart vs. Random ---")
     turn = 0
     draft_progress = tqdm(total=len(player_pool), desc="Drafting Players")
+    ##add the team leaders to squad and pop then from pool
+    smart_team.append(team_owners[0])
+    player_pool.remove(team_owners[0])
+    random_team.append(team_owners[1])
+    player_pool.remove(team_owners[1])
     while player_pool:
         if turn % 2 == 0: # Smart Team's turn
             best_pick = find_best_pick_parallel(smart_team, random_team, player_pool, player_data_dict, h2h_wins_dict)
             smart_team.append(best_pick)
-            player_pool.remove(best_pick)
-        else: # Random Team's turn
-            # To make it slightly more realistic, let's assume random picks the best remaining by rating
-            # This is a tougher test than pure random.
+            player_pool.remove(best_pick.lower())
+        else: # Random Team's turn (now Smart Opponent)
+            # Opponent uses the smart pick function
+            opponent_recommendations = find_best_pick_parallel(random_team, smart_team, player_pool, player_data_dict, h2h_wins_dict)
             
-            # Filter player_data_df for remaining players and find highest rated
-            remaining_players_df = player_data_df.loc[player_pool]
-            random_pick = remaining_players_df['Current Rating'].idxmax() # Picks highest rated player left
-            
-            random_team.append(random_pick)
-            player_pool.remove(random_pick)
+            if opponent_recommendations:
+                random_pick = opponent_recommendations # Take the top recommendation (player name)
+                random_team.append(random_pick)
+                player_pool.remove(random_pick.lower())
+            else:
+                # Fallback if no recommendations (shouldn't happen with current logic)
+                print("Warning: Opponent found no recommendations. Picking highest rated.")
+                remaining_players_df = player_data_df.loc[player_pool]
+                random_pick = remaining_players_df['Current Rating'].idxmax()
+                random_team.append(random_pick)
+                player_pool.remove(random_pick.lower())
         turn += 1
         draft_progress.update(1)
     draft_progress.close()

@@ -13,8 +13,16 @@ DEST_DIR = "detailed_games"
 API_ENDPOINT = "https://lichess.org/api/tournament/{}/games"
 RATE_LIMIT_DELAY_SECONDS = 0
 START_DATE = "2025-02-15"
-END_DATE = "2025-07-29"
+END_DATE = "2026-07-29"
 
+def parse_iso_zulu(date_str):
+    """wrapper function for parsing datetime objects in which my have fractional seconds or not """
+    for fmt in ("%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ"):
+        try:
+            return datetime.strptime(date_str, fmt).replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+    raise ValueError(f"Unrecognized timestamp format: {date_str}")
 
 def parse_pgn_stream(pgn_text):
     """
@@ -139,9 +147,7 @@ def main():
             date_str = summary_data.get("startsAt")
             if not date_str:
                 continue
-            tournament_dt = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ").replace(
-                tzinfo=timezone.utc
-            )
+            tournament_dt =parse_iso_zulu(date_str)
             if not (start_dt <= tournament_dt <= end_dt):
                 continue
         except (json.JSONDecodeError, KeyError, ValueError) as e:
