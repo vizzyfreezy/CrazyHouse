@@ -23,10 +23,10 @@ from simulate_teambattle import (
 # DRAFT ASSISTANT CONFIGURATION - EDIT THIS SECTION
 # ==============================================================================
 PLAYER_POOL = [
-    'anthonyoja', 'zgm-giantkiller', 'bayormiller_cno', 'trappatoni', 'zlater007', 'b4elma',
-    'patzernoblechuks', 'ovokodigood', 'adet2510', 'noblechuks_cno', 'spicypearl8', 'tommybrooks',
+    'anthonyoja', 'zgm-giantkiller', 'bayormiller_cno', 'b4elma',
+    'patzernoblechuks','ovokodigood', 'spicypearl8','prommizex', 'tommybrooks','eburu_sanmi'
     'ezengwori', 'ageless_2', 'crazybugg', 'warlock_dabee', 'hardeywale', 'vegakov',
-    'kirekachesschamp', 'bb_thegame', 'martins177', 'lexzero2', 'overgiftedlight', 'nevagivup'
+    'kirekachesschamp', 'bb_thegame', 'martins177', 'lexzero2', 'overgiftedlight',
 ]
 SIMULATIONS_PER_CANDIDATE = 500
 GAMES_PER_MATCHUP = 2

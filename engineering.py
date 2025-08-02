@@ -22,6 +22,7 @@ USERNAME_ALIAS_TO_PRIMARY = {
     "neo-matrix": "hardeywale",
     "noblechuks_cno": "patzernoblechuks",
     "specialagentfash": "ezengwori",
+    "naijacobweb":"crazybugg",
 }
 
 # Create a mapping where keys and values are lowercase
@@ -111,26 +112,55 @@ def load_and_process_data():
     return games_df, arena_df
 
 
-def calculate_performance_z_scores(arena_df):
-    """Calculates a normalized Performance Z-Score for each player in each tournament."""
-    print("--- Step 2 of 4: Calculating Performance Z-Scores ---")
+def calculate_performance_metrics(arena_df):
+    """
+    Calculates normalized performance scores (Z-Score and Normalized PPG) for each player.
+    Normalization is done *within* each tournament to ensure fairness.
+    """
+    print("--- Step 2 of 4: Calculating Performance Metrics ---")
     
-    z_scores = []
+    all_z_scores = []
+    all_normalized_ppg = []
+
     for file, tournament_group in arena_df.groupby('source_file'):
+        # Filter for players who have played a minimum number of games in the tournament
         valid_players = tournament_group[tournament_group['games_played'] >= MIN_GAMES_PER_TOURNAMENT].copy()
-        if len(valid_players) < 2: continue
+        if len(valid_players) < 2:
+            continue  # Need at least two players to calculate meaningful stats
+
+        # Calculate Points Per Game (PPG)
         valid_players['ppg'] = np.divide(valid_players['score'], valid_players['games_played'])
+        
+        # --- Z-Score Calculation (for Consistency) ---
         mean_ppg, std_dev_ppg = valid_players['ppg'].mean(), valid_players['ppg'].std()
-        if std_dev_ppg == 0: valid_players['z_score'] = 0
-        else: valid_players['z_score'] = (valid_players['ppg'] - mean_ppg) / std_dev_ppg
-        z_scores.extend(valid_players[['player_name', 'z_score']].to_dict('records'))
-    return pd.DataFrame(z_scores)
+        if std_dev_ppg == 0:
+            valid_players['z_score'] = 0
+        else:
+            valid_players['z_score'] = (valid_players['ppg'] - mean_ppg) / std_dev_ppg
+        all_z_scores.append(valid_players[['player_name', 'z_score']])
+
+        # --- Normalized PPG Calculation (for True Performance) ---
+        min_ppg, max_ppg = valid_players['ppg'].min(), valid_players['ppg'].max()
+        if (max_ppg - min_ppg) > 0:
+            valid_players['norm_ppg'] = (valid_players['ppg'] - min_ppg) / (max_ppg - min_ppg)
+        else:
+            valid_players['norm_ppg'] = 0.5  # Assign a neutral score if all players had the same PPG
+        all_normalized_ppg.append(valid_players[['player_name', 'norm_ppg']])
+
+    z_scores_df = pd.concat(all_z_scores, ignore_index=True) if all_z_scores else pd.DataFrame(columns=['player_name', 'z_score'])
+    norm_ppg_df = pd.concat(all_normalized_ppg, ignore_index=True) if all_normalized_ppg else pd.DataFrame(columns=['player_name', 'norm_ppg'])
+    
+    return z_scores_df, norm_ppg_df
 
 
-def create_player_profiles(games_df, z_scores_df, arena_df, qualified_players):
+def create_player_profiles(games_df, z_scores_df, norm_ppg_df, arena_df, qualified_players):
     """Calculates all statistics and returns the final report DataFrame."""
     print("--- Step 3 of 4: Calculating Player Statistics and H2H Rivalries ---")
     
+    # --- Aggregate the normalized scores for each player ---
+    player_avg_norm_ppg = norm_ppg_df.groupby('player_name')['norm_ppg'].mean().reset_index()
+    player_avg_norm_ppg = player_avg_norm_ppg.set_index('player_name')
+
     player_profiles = []
     for player_name in qualified_players:
         profile = {'player_name': player_name}
@@ -143,8 +173,10 @@ def create_player_profiles(games_df, z_scores_df, arena_df, qualified_players):
         last_game = player_all_games.sort_values('datetime').iloc[-1]
         profile['current_rating'] = last_game['winner_rating'] if last_game['winner_name'] == player_name else last_game['loser_rating']
 
-        if not player_z_scores.empty and len(player_z_scores) > 1: profile['z_score_volatility'] = player_z_scores['z_score'].std()
-        else: profile['z_score_volatility'] = None
+        if not player_z_scores.empty and len(player_z_scores) > 1:
+            profile['z_score_volatility'] = player_z_scores['z_score'].std()
+        else:
+            profile['z_score_volatility'] = None
             
         total_games = len(player_all_games)
         win_rate_on_time = ((player_games_as_winner['status'] == 'Time forfeit').sum() / total_games) * 100 if total_games > 0 else 0
@@ -155,7 +187,8 @@ def create_player_profiles(games_df, z_scores_df, arena_df, qualified_players):
             total_games_in_arena = player_arena_data['games_played'].sum()
             berserk_wins = player_arena_data['sheet'].str.count('3').sum() + player_arena_data['sheet'].str.count('5').sum()
             profile['berserk_win_rate'] = (berserk_wins / total_games_in_arena) * 100 if total_games_in_arena > 0 else 0
-            profile['true_avg_performance'] = player_arena_data['true_performance'].mean()
+            # The new, fairer performance metric
+            profile['true_avg_performance'] = player_avg_norm_ppg.loc[player_name, 'norm_ppg'] if player_name in player_avg_norm_ppg.index else 0
         else:
             profile['berserk_win_rate'], profile['true_avg_performance'] = 0, 0
             
@@ -180,20 +213,24 @@ def create_player_profiles(games_df, z_scores_df, arena_df, qualified_players):
         for opponent in opponents:
             if opponent in qualified_players:
                 wins, losses = wins_as_p1[wins_as_p1['loser_name'] == opponent]['wins'].sum(), losses_as_p1[losses_as_p1['winner_name'] == opponent]['wins'].sum()
-                if (wins + losses) >= H2H_MIN_GAMES_FOR_RIVALRY: rivalry_stats.append({'opponent': opponent, 'win_pct': (wins / (wins + losses)) * 100})
+                if (wins + losses) >= H2H_MIN_GAMES_FOR_RIVALRY:
+                    rivalry_stats.append({'opponent': opponent, 'win_pct': (wins / (wins + losses)) * 100})
         if rivalry_stats:
             sorted_rivals = sorted(rivalry_stats, key=lambda x: x['win_pct'], reverse=True)
             favorite_opponents[player_name] = [f"{r['opponent']} ({r['win_pct']:.0f}%)" for r in sorted_rivals[:3]]
             nemesis_players[player_name] = [f"{r['opponent']} ({r['win_pct']:.0f}%)" for r in sorted(rivalry_stats, key=lambda x: x['win_pct'])[:3]]
     
-    profiles_df['Favorite Opponents'], profiles_df['Nemesis Players'] = profiles_df.index.map(favorite_opponents), profiles_df.index.map(nemesis_players)
+    profiles_df['Favorite Opponents'] = profiles_df.index.map(favorite_opponents)
+    profiles_df['Nemesis Players'] = profiles_df.index.map(nemesis_players)
     profiles_df['Favorite Opponents'] = profiles_df['Favorite Opponents'].apply(lambda x: x if isinstance(x, list) else [])
     profiles_df['Nemesis Players'] = profiles_df['Nemesis Players'].apply(lambda x: x if isinstance(x, list) else [])
 
     for col in ['berserk_win_rate', 'z_score_volatility', 'time_pressure_factor']:
         min_val, max_val = profiles_df[col].min(), profiles_df[col].max()
-        if (max_val - min_val) > 0: profiles_df[f'norm_{col}'] = (profiles_df[col] - min_val) / (max_val - min_val)
-        else: profiles_df[f'norm_{col}'] = 0.5
+        if (max_val - min_val) > 0:
+            profiles_df[f'norm_{col}'] = (profiles_df[col] - min_val) / (max_val - min_val)
+        else:
+            profiles_df[f'norm_{col}'] = 0.5
             
     report_df = pd.DataFrame(index=profiles_df.index)
     report_df['Current Rating'] = profiles_df['current_rating']
@@ -242,14 +279,14 @@ if __name__ == "__main__":
     games_df, arena_df = load_and_process_data()
 
     if not games_df.empty:
-        z_scores_df = calculate_performance_z_scores(arena_df)
+        z_scores_df, norm_ppg_df = calculate_performance_metrics(arena_df)
         
         player_game_counts = games_df['winner_name'].value_counts().add(games_df['loser_name'].value_counts(), fill_value=0)
         qualified_players = player_game_counts[player_game_counts >= MIN_GAMES_THRESHOLD_OVERALL].index.tolist()
         
         print("--- Step 4 of 4: Generating Final Reports ---")
         
-        report_df = create_player_profiles(games_df, z_scores_df, arena_df, qualified_players)
+        report_df = create_player_profiles(games_df, z_scores_df, norm_ppg_df, arena_df, qualified_players)
         
         # Output 1: The Main Player Scouting Report
         print("\n\n=======================================================================================================")
