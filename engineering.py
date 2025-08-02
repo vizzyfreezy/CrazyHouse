@@ -12,6 +12,24 @@ MIN_GAMES_PER_TOURNAMENT = 5
 H2H_MIN_GAMES_FOR_RIVALRY = 10
 GIANT_SLAYER_RATING_DIFF = 200
 
+# --- USERNAME MAPPING (Case-Insensitive) ---
+# Add alternative usernames here to map them to a primary account.
+# All usernames will be converted to and stored in lowercase.
+# Format: "alternative_username": "primary_username"
+USERNAME_ALIAS_TO_PRIMARY = {
+    "dabee": "warlock_dabee",
+    "nevagivup": "clintonsalako",
+    "neo-matrix": "hardeywale",
+    "noblechuks_cno": "patzernoblechuks",
+    "specialagentfash": "ezengwori",
+}
+
+# Create a mapping where keys and values are lowercase
+USERNAME_MAPPING = {k.lower(): v.lower() for k, v in USERNAME_ALIAS_TO_PRIMARY.items()}
+# Also map the primary username to itself (lowercase) to handle cases where it appears directly.
+for primary_name in USERNAME_ALIAS_TO_PRIMARY.values():
+    USERNAME_MAPPING[primary_name.lower()] = primary_name.lower()
+
 # ==============================================================================
 # DATA PROCESSING FUNCTIONS
 # ==============================================================================
@@ -81,6 +99,15 @@ def load_and_process_data():
     if not games_df.empty:
         games_df = games_df[games_df['status'] != 'Abandoned'].copy()
     
+    # --- APPLY USERNAME MAPPING ---
+    # Consolidate usernames based on the mapping.
+    # Usernames are already lowercased during the initial processing.
+    if not arena_df.empty:
+        arena_df['player_name'] = arena_df['player_name'].map(USERNAME_MAPPING).fillna(arena_df['player_name'])
+    if not games_df.empty:
+        games_df['winner_name'] = games_df['winner_name'].map(USERNAME_MAPPING).fillna(games_df['winner_name'])
+        games_df['loser_name'] = games_df['loser_name'].map(USERNAME_MAPPING).fillna(games_df['loser_name'])
+        
     return games_df, arena_df
 
 
