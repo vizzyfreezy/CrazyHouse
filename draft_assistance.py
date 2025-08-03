@@ -24,7 +24,7 @@ from simulate_teambattle import (
 # ==============================================================================
 PLAYER_POOL = [
     'anthonyoja', 'zgm-giantkiller', 'bayormiller_cno', 'b4elma',
-    'patzernoblechuks','ovokodigood', 'spicypearl8','prommizex', 'tommybrooks','eburu_sanmi'
+    'patzernoblechuks','ovokodigood', 'spicypearl8','prommizex', 'tommybrooks','eburu_sanmi',
     'ezengwori', 'ageless_2', 'crazybugg', 'warlock_dabee', 'hardeywale', 'vegakov',
     'kirekachesschamp', 'bb_thegame', 'martins177', 'lexzero2', 'overgiftedlight',
 ]
@@ -42,9 +42,8 @@ def run_mini_simulation(my_team, opponent_team, player_data, h2h_data):
         player_scores = {player: 0.0 for player in my_team + opponent_team}
         for p1_name, p2_name in itertools.product(my_team, opponent_team):
             for _ in range(GAMES_PER_MATCHUP):
-                # Pass player_data_dict and h2h_wins_dict directly to simulate_game_advanced
-                p1_stats = player_data[p1_name] # Access as dictionary
-                p2_stats = player_data[p2_name] # Access as dictionary
+                p1_stats = player_data[p1_name]
+                p2_stats = player_data[p2_name]
                 p1_score, p2_score = simulate_game_advanced(p1_name, p2_name, p1_stats, p2_stats, h2h_data)
                 player_scores[p1_name] += p1_score
                 player_scores[p2_name] += p2_score
@@ -68,28 +67,22 @@ def find_best_pick_parallel(my_team, opponent_team, player_pool, player_data_dic
     If opponent_team is empty, recommends based on rating.
     """
     if not opponent_team:
-        # If no opponent team, recommend based on raw rating
         candidate_ratings = []
         for candidate in player_pool:
             rating = player_data_dict[candidate]['Current Rating']
             candidate_ratings.append((candidate, rating))
         return sorted(candidate_ratings, key=lambda item: item[1], reverse=True)
 
-    # Prepare the arguments for each parallel task
     tasks = [(candidate, my_team, opponent_team, player_data_dict, h2h_wins_dict) for candidate in player_pool]
     
     candidate_scores = {}
     
-    # Use all available CPU cores
-    num_processes = os.cpu_count() if os.cpu_count() else 4 # Fallback to 4 if not detectable
+    num_processes = os.cpu_count() if os.cpu_count() else 4
     print(f"Using {num_processes} CPU cores for parallel analysis.")
 
     with Pool(processes=num_processes) as p:
-        # Use tqdm to create a progress bar for the parallel processing
-        # p.imap_unordered processes tasks in parallel and yields results as they complete
         results = list(tqdm(p.imap_unordered(analyze_candidate_wrapper, tasks), total=len(tasks), desc="Analyzing Candidates (Parallel)"))
     
-    # Collect results from the parallel tasks
     for candidate, score in results:
         candidate_scores[candidate] = score
         
@@ -104,12 +97,17 @@ def display_draft_state(my_team, opponent_team, player_pool):
     print(f"Opponent's Team ({len(opponent_team)}): {', '.join(opponent_team) if opponent_team else 'None'}")
     print(f"Players Remaining ({len(player_pool)}): {', '.join(player_pool[:5])}...")
     print("="*50 + "\n")
-##Interactive Selection
-def fzf_select(options):
-    """Display a terminal-based selection box using fzf."""
+
+# Interactive Selection
+def fzf_select(options, header=None):
+    """Display a terminal-based selection box using fzf, with an optional header."""
     try:
+        fzf_command = ['fzf']
+        if header:
+            fzf_command.extend(['--header', header])
+        
         result = subprocess.run(
-            ['fzf'], input='\n'.join(options), text=True, capture_output=True
+            fzf_command, input='\n'.join(options), text=True, capture_output=True
         )
         return result.stdout.strip()
     except FileNotFoundError:
@@ -146,20 +144,35 @@ if __name__ == "__main__":
     
     while player_pool:
         display_draft_state(my_team, opponent_team, player_pool)
+
+        if not player_pool:
+            break
+
         choice = input("Whose turn is it? (1: My Turn, 2: Opponent's Turn, 'exit' to end): ").strip()
         
         if choice == '1':
+            if len(player_pool) == 1:
+                selected_player = player_pool[0]
+                print(f"\n--- Only one player left. Auto-drafting {selected_player.upper()} ---")
+                my_team.append(selected_player)
+                player_pool.remove(selected_player)
+                print(f"\n>> You have drafted {selected_player.upper()}.")
+                continue
+
             print("\n--- RUNNING ANALYSIS FOR YOUR PICK (IN PARALLEL) ---")
-            # Pass player_data_df as a dictionary to run_mini_simulation
             recommendations = find_best_pick_parallel(my_team, opponent_team, player_pool, player_data_df.to_dict('index'), h2h_wins_dict)
             
-            # Build fzf options
             print("\n--- SELECT FROM RECOMMENDATIONS OR FULL POOL ---")
             fzf_options = [
                 f"{player}  (score: {score:.2f})" for player, score in recommendations[:5]
             ] + ['────────────'] + player_pool
             
-            selected_line = fzf_select(fzf_options)
+            my_team_str = ', '.join(my_team) if my_team else 'None'
+            opponent_team_str = ', '.join(opponent_team) if opponent_team else 'None'
+            fzf_header = (f"My Team: {my_team_str}\n"
+                          f"Opponent: {opponent_team_str}\n"
+                          f"-----------------------------------")
+            selected_line = fzf_select(fzf_options, header=fzf_header)
             selected_player = extract_player_name(selected_line)
 
             if selected_player in player_pool:
@@ -170,7 +183,20 @@ if __name__ == "__main__":
                 print(">> Invalid pick or cancelled.")
         
         elif choice == '2':
-            opponent_pick = fzf_select(player_pool)
+            if len(player_pool) == 1:
+                selected_player = player_pool[0]
+                print(f"\n--- Only one player left. Opponent auto-drafts {selected_player.upper()} ---")
+                opponent_team.append(selected_player)
+                player_pool.remove(selected_player)
+                print(f"\n>> Opponent has drafted {selected_player.upper()}.")
+                continue
+
+            my_team_str = ', '.join(my_team) if my_team else 'None'
+            opponent_team_str = ', '.join(opponent_team) if opponent_team else 'None'
+            fzf_header = (f"My Team: {my_team_str}\n"
+                          f"Opponent: {opponent_team_str}\n"
+                          f"-----------------------------------")
+            opponent_pick = fzf_select(player_pool, header=fzf_header)
             if opponent_pick in player_pool:
                 opponent_team.append(opponent_pick)
                 player_pool.remove(opponent_pick)

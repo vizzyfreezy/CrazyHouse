@@ -8,15 +8,13 @@ from multiprocessing import Pool
 # ARENA TEAM BATTLE SIMULATION CONFIGURATION - EDIT THIS SECTION
 # ==============================================================================
 TEAMS = {
-    "my_team": [
-        "bayormiller_cno", "warlock_dabee", "crazybugg", "anthonyoja",
-        "zlater007", "nevagivup", "noblechuks_cno", "adet2510",
-        "trappatoni", "tommybrooks", "b4elma", "spicypearl8"
+    "My Team": [
+        "bayormiller_cno", "warlock_dabee", "anthonyoja", "crazybugg", "bb_thegame", 
+        "ovokodigood", "patzernoblechuks", "tommybrooks", "prommizex", "lexzero2"
     ],
-    "opponent_team": [
-        "hardeywale", "zgm-giantkiller", "kirekachesschamp", "ageless_2",
-        "ezengwori", "bb_thegame", "vegakov", "ovokodigood",
-        "martins177", "patzernoblechuks", "lexzero2", "overgiftedlight"
+    "Opponent's Team": [
+        "hardeywale", "zgm-giantkiller", "ageless_2", "kirekachesschamp", "ezengwori", 
+        "vegakov", "martins177", "eburu_sanmi", "b4elma", "overgiftedlight"
     ]
 }
 TOURNAMENT_DURATION_MINUTES = 90
