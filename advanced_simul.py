@@ -16,9 +16,9 @@ DRAW_PROBABILITY = 0.03
 
 # --- Matchup Factor Weights ---
 # These weights determine the importance of different factors. They should sum to 1.0.
-WEIGHT_RATING = 0.30  # 60% of the prediction comes from the rating difference
-WEIGHT_H2H = 0.60     # 25% comes from the direct Head-to-Head record
-WEIGHT_STYLE = 0.10# 15% comes from the clash of player archetypes
+WEIGHT_RATING = 0.50
+WEIGHT_H2H = 0.30
+WEIGHT_STYLE = 0.20
 
 # ==============================================================================
 # CORE SIMULATION LOGIC (UPGRADED)

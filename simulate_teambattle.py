@@ -8,21 +8,22 @@ from multiprocessing import Pool
 # ARENA TEAM BATTLE SIMULATION CONFIGURATION - EDIT THIS SECTION
 # ==============================================================================
 TEAMS = {
-    "My Team": [
-        "bayormiller_cno", "warlock_dabee", "anthonyoja", "crazybugg", "bb_thegame", 
-        "ovokodigood", "patzernoblechuks", "tommybrooks", "prommizex", "lexzero2"
+    "Team Miller": [
+        "anthonyoja", "warlock_dabee", "ageless_2", "mini_verse", "zlater007", 
+        "ovokodigood", "patzernoblechuks", "martins177", "b4elma", "overgiftedlight", 
+        "genuine99", "bayormiller_cno"
     ],
-    "Opponent's Team": [
-        "hardeywale", "zgm-giantkiller", "ageless_2", "kirekachesschamp", "ezengwori", 
-        "vegakov", "martins177", "eburu_sanmi", "b4elma", "overgiftedlight"
+    "Team Wale": [
+        "zgm-giantkiller", "kirekachesschamp", "crazybugg", "ezengwori", "vegakov", 
+        "bb_thegame", "eburu_sanmi", "tommybrooks", "prommizex", "lexzero2", "spicypearl8", "hardeywale"
     ]
 }
 TOURNAMENT_DURATION_MINUTES = 90
 NUM_SIMULATIONS = 1000
 TIME_CONTROL_SECONDS = 120
-WEIGHT_RATING = 0.60
-WEIGHT_H2H = 0.27
-WEIGHT_STYLE = 0.13
+WEIGHT_RATING = 0.50
+WEIGHT_H2H = 0.30
+WEIGHT_STYLE = 0.20
 DRAW_PROBABILITY = 0.00001 # Very low, as per Crazyhouse game characteristics
 INFAMY_RATING_THRESHOLD = 2200 # Define threshold for "infamous" players
 
@@ -193,6 +194,63 @@ def run_simulation_wrapper(_):
 # ==============================================================================
 import os
 
+def analyze_and_display_results(team_results_df, player_scores_df, player_data_df, teams, num_simulations, duration_minutes):
+    """Analyzes simulation results and prints a clean, insightful report."""
+    
+    # 1. Calculate Win Percentages
+    winners = []
+    for i in range(len(team_results_df)):
+        row = team_results_df.iloc[i]
+        if (row == row.max()).sum() > 1:
+            winners.append('Draw')
+        else:
+            winners.append(row.idxmax())
+    win_percentages = (pd.Series(winners).value_counts() / num_simulations * 100).fillna(0)
+
+    # 2. Create Player Performance Report
+    all_players = [p for team_list in teams.values() for p in team_list]
+    player_report = pd.DataFrame(index=all_players)
+    player_report['Team'] = {p: name for name, players in teams.items() for p in players}
+    player_report['Avg Score'] = player_scores_df.mean(axis=0)
+    player_report['Rating'] = player_report.index.map(player_data_df['Current Rating'])
+
+    # 3. Identify High Performers and Weak Links
+    for team_name in teams.keys():
+        team_df = player_report[player_report['Team'] == team_name].copy()
+        team_df['Rating Rank'] = team_df['Rating'].rank(ascending=False, method='min')
+        team_df['Performance Rank'] = team_df['Avg Score'].rank(ascending=False, method='min')
+        team_df['Rank Delta'] = team_df['Rating Rank'] - team_df['Performance Rank']
+        
+        player_report.loc[team_df.index, 'Performance Rank'] = team_df['Performance Rank']
+        player_report.loc[team_df.index, 'Rank Delta'] = team_df['Rank Delta']
+
+    # 4. Print the new, clean report
+    print("\n\n=======================================================================")
+    print("            DYNAMIC ARENA TEAM BATTLE PREDICTIONS")
+    print("=======================================================================")
+    print(f"Based on {num_simulations} simulated {duration_minutes}-minute Arena Team Battles.\n")
+    
+    team_report_df = pd.DataFrame({'Win %': win_percentages})
+    team_report_df['Avg Team Score'] = team_results_df.mean(axis=0)
+    print("--- Predicted Team Outcomes ---")
+    print(team_report_df.sort_values(by='Win %', ascending=False).round(1).to_string())
+    print("\n" + "-"*71)
+
+    print("\n--- Player Performance Analysis ---")
+    print("  'Rank Delta' shows performance vs. rating expectation.")
+    print("  A positive delta means the player performed better than their rating implies.")
+    print("  A negative delta means the player underperformed.\n")
+
+    pd.set_option('display.max_rows', 100)
+    for team_name in teams.keys():
+        print(f"--- {team_name} ---")
+        team_view = player_report[player_report['Team'] == team_name].copy()
+        team_view['Rank Delta'] = team_view['Rank Delta'].apply(lambda x: f"+{x}" if x > 0 else str(x))
+        print(team_view[['Avg Score', 'Performance Rank', 'Rating', 'Rank Delta']].sort_values(by='Avg Score', ascending=False).round(1).to_string())
+        print("")
+
+    print("=======================================================================")
+
 if __name__ == "__main__":
 
     try:
@@ -211,9 +269,8 @@ if __name__ == "__main__":
     h2h_wins_dict = build_h2h_wins_dict_from_games(games_df)
     player_data_dict = player_data_df.to_dict('index')
 
-    print(f"\n--- Starting Dynamic Arena Team Battle Simulation (with Score Sheets) ---")
+    print(f"\n--- Starting Dynamic Arena Team Battle Simulation ---")
 
-    # Dynamically set the number of processes
     try:
         NUM_PROCESSES = os.cpu_count()
         print(f"Using {NUM_PROCESSES} CPU cores for parallel processing.")
@@ -225,91 +282,11 @@ if __name__ == "__main__":
         results = list(tqdm(pool.imap(run_simulation_wrapper, range(NUM_SIMULATIONS)), total=NUM_SIMULATIONS))
 
     all_team_results, all_player_scores = [], []
-    first_sim_details = None
-
-    for i, (team_scores, player_details) in enumerate(results):
+    for team_scores, player_details in results:
         all_team_results.append(team_scores)
         all_player_scores.append(player_details['score'])
-        if i == 0:
-            first_sim_details = player_details
 
     team_results_df = pd.DataFrame(all_team_results)
     player_scores_df = pd.DataFrame(all_player_scores)
     
-    margin_records = []
-    
-    for i, result in enumerate(all_team_results):
-        team_names = result.index.tolist()
-        if len(team_names) != 2:
-            continue
-    
-        team_a, team_b = team_names
-        score_a, score_b = result[team_a], result[team_b]
-        margin = abs(score_a - score_b)
-        winner = team_a if score_a > score_b else team_b
-    
-        margin_records.append({
-            'index': i,
-            'winner': winner,
-            'loser': team_b if winner == team_a else team_a,
-            'margin': margin,
-            'score_winner': max(score_a, score_b),
-            'score_loser': min(score_a, score_b)
-        })
-    
-    margins_df = pd.DataFrame(margin_records)
-    
-    for team in TEAMS.keys():
-        biggest_win = margins_df[margins_df['winner'] == team].sort_values(by='margin', ascending=False).head(1)
-        if not biggest_win.empty:
-            row = biggest_win.iloc[0]
-            print(f"\n🔹 Highest-margin win for {team}:")
-            print(f"  Simulation #{row['index']} — {row['score_winner']} vs {row['score_loser']} (margin: {row['margin']})")
-# -------------------------------------
-
-    print("\n--- Simulation Complete. Analyzing Results... ---")
-
-    # Analyze and display team results
-    winners = []
-    for i in range(len(team_results_df)):
-        row = team_results_df.iloc[i]
-        if (row == row.max()).sum() > 1:
-            winners.append('Draw')
-        else:
-            winners.append(row.idxmax())
-    win_percentages = (pd.Series(winners).value_counts() / NUM_SIMULATIONS * 100).fillna(0)
-
-    print("\n\n=======================================================================")
-    print("            DYNAMIC ARENA TEAM BATTLE PREDICTIONS")
-    print("=======================================================================")
-    print(f"Based on {NUM_SIMULATIONS} simulated {TOURNAMENT_DURATION_MINUTES}-minute Arena Team Battles.\n")
-    print("--- Teams ---")
-    for name, players in TEAMS.items():
-        print(f"  {name}: {', '.join(players)}")
-
-    report_df = pd.DataFrame({'Win %': win_percentages})
-    report_df['Avg Team Score'] = team_results_df.mean(axis=0)
-    print("\n--- Predicted Team Outcomes ---")
-    print(report_df.sort_values(by='Win %', ascending=False).round(1).to_string())
-
-    print("\n\n--- Player Contribution Report (Averages) ---")
-    player_report = pd.DataFrame(index=all_tournament_players)
-    player_report['Team'] = {p: name for name, players in TEAMS.items() for p in players}
-    player_report['Avg Score'] = player_scores_df.mean(axis=0)
-    print(player_report.sort_values(by=['Team', 'Avg Score'], ascending=[True, False]).round(1).to_string())
-
-    print("\n\n--- In-Depth Look: Details from a Single Sample Simulation ---")
-    print("This shows one possible outcome to verify the simulation's logic.")
-    print("Score codes: 4=Streak Win, 2=Normal Win, 1=Draw, 0=Loss\n")
-
-    if first_sim_details is not None:
-        debug_report = pd.DataFrame()
-        debug_report['Team'] = {p: name for name, players in TEAMS.items() for p in players}
-        debug_report['Final Score'] = first_sim_details['score']
-        debug_report['Simulated Sheet'] = first_sim_details['sheet']
-        debug_report['Opponent Order'] = first_sim_details['opponent_list']
-
-        pd.set_option('display.max_colwidth', 100)
-        print(debug_report.sort_values(by='Final Score', ascending=False).to_string())
-
-    print("=======================================================================")
+    analyze_and_display_results(team_results_df, player_scores_df, player_data_df, TEAMS, NUM_SIMULATIONS, TOURNAMENT_DURATION_MINUTES)

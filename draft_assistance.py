@@ -26,10 +26,10 @@ PLAYER_POOL = [
     'anthonyoja', 'zgm-giantkiller', 'bayormiller_cno', 'b4elma',
     'patzernoblechuks','ovokodigood', 'spicypearl8','prommizex', 'tommybrooks','eburu_sanmi',
     'ezengwori', 'ageless_2', 'crazybugg', 'warlock_dabee', 'hardeywale', 'vegakov',
-    'kirekachesschamp', 'bb_thegame', 'martins177', 'lexzero2', 'overgiftedlight',
+    'kirekachesschamp', 'bb_thegame', 'martins177', 'lexzero2', 'overgiftedlight','zlater007','mini_verse','genuine99'
 ]
 SIMULATIONS_PER_CANDIDATE = 500
-GAMES_PER_MATCHUP = 2
+GAMES_PER_MATCHUP = 5
 
 # ==============================================================================
 # CORE SIMULATION & ANALYSIS LOGIC
