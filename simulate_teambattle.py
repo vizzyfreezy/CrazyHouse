@@ -9,21 +9,20 @@ from multiprocessing import Pool
 # ==============================================================================
 TEAMS = {
     "Team Miller": [
-        "anthonyoja", "warlock_dabee", "ageless_2", "mini_verse", "zlater007", 
-        "ovokodigood", "patzernoblechuks", "martins177", "b4elma", "overgiftedlight", 
-        "genuine99", "bayormiller_cno"
+        "anthonyoja", "mini_verse", "zlater007","zgm-giantkiller", "vegakov",
+       "bayormiller_cno","lexzero2","martins177","tommybrooks","mabunmi_cno","eburu_sanmi","spicypearl8","warlock_dabee",
     ],
-    "Team Wale": [
-        "zgm-giantkiller", "kirekachesschamp", "crazybugg", "ezengwori", "vegakov", 
-        "bb_thegame", "eburu_sanmi", "tommybrooks", "prommizex", "lexzero2", "spicypearl8", "hardeywale"
+    "Team Wale": ["presh_1",
+      "ageless_2",
+         "kirekachesschamp","ovokodigood","crazybugg", "ezengwori","hardeywale","clintonsalako","patzernoblechuks","b4elma","prommizex","overgiftedlight","genuine99"
     ]
 }
 TOURNAMENT_DURATION_MINUTES = 90
 NUM_SIMULATIONS = 1000
 TIME_CONTROL_SECONDS = 120
-WEIGHT_RATING = 0.50
+WEIGHT_RATING = 0.60
 WEIGHT_H2H = 0.30
-WEIGHT_STYLE = 0.20
+WEIGHT_STYLE = 0.1
 DRAW_PROBABILITY = 0.00001 # Very low, as per Crazyhouse game characteristics
 INFAMY_RATING_THRESHOLD = 2200 # Define threshold for "infamous" players
 
@@ -44,7 +43,7 @@ def calculate_h2h_advantage(p1_name, p2_name, h2h_wins_dict):
     p1_wins = h2h_wins_dict.get((p1_name, p2_name), 0)
     p2_wins = h2h_wins_dict.get((p2_name, p1_name), 0)
     total_games = p1_wins + p2_wins
-    if total_games < 10: return 0.0
+    if total_games < 5: return 0.0
     return ((p1_wins / total_games) - 0.5) * 2
 
 def calculate_style_advantage(p1_stats, p2_stats):
@@ -79,36 +78,75 @@ def estimate_game_duration(base_time_seconds):
     return random.uniform(min_duration, max_duration)
 
 def find_pairings(player_states, teams):
-    player_to_team = {player: name for name, players in teams.items() for player in players}
-    
-    # Separate players by team and sort by score
-    team_waiting_players = {team: sorted([p for p in players if player_states[p]['status'] == 'waiting'], 
-                                        key=lambda p: player_states[p]['score'], reverse=True) 
-                          for team, players in teams.items()}
+    """
+    Pairs waiting players from two teams based on score, avoiding recent opponents.
 
-    pairings, paired_players = [], set()
-    
-    # Assume two teams for pairing logic
-    team1_name, team2_name = list(teams.keys())
+    This improved version is more efficient and robust.
+    """
+    # --- 1. Input Validation ---
+    if len(teams) != 2:
+        # Or raise a ValueError, depending on desired behavior
+        print("Error: This function is designed to pair exactly two teams.")
+        return []
+
+    team_names = list(teams.keys())
+    team1_name, team2_name = team_names[0], team_names[1]
+
+    # --- 2. Separate and Sort Waiting Players (No change here, this part is good) ---
+    team_waiting_players = {
+        team: sorted(
+            [p for p in players if player_states.get(p, {}).get('status') == 'waiting'],
+            key=lambda p: player_states.get(p, {}).get('score', 0),
+            reverse=True
+        )
+        for team, players in teams.items()
+    }
+
     team1_players = team_waiting_players[team1_name]
     team2_players = team_waiting_players[team2_name]
+
+    pairings = []
+    paired_players = set()
     
-    # Iterate through the smaller team and find opponents in the larger team
-    if len(team1_players) > len(team2_players):
-        team1_players, team2_players = team2_players, team1_players
+    # Pointers for iterating through each team's sorted player list
+    i, j = 0, 0 
 
-    for p1 in team1_players:
-        if p1 in paired_players: continue
-        for p2 in team2_players:
-            if p2 in paired_players: continue
-            if p2 not in player_states[p1]['recent_opponents']:
-                pairings.append((p1, p2))
-                paired_players.add(p1)
-                paired_players.add(p2)
-                break
-            
+    # --- 3. Efficient Pairing Loop ---
+    while i < len(team1_players) and j < len(team2_players):
+        p1 = team1_players[i]
+        p2 = team2_players[j]
+
+        # If p1 is already paired, advance to the next player on that team
+        if p1 in paired_players:
+            i += 1
+            continue
+        
+        # If p2 is already paired, advance to the next player on that team
+        if p2 in paired_players:
+            j += 1
+            continue
+
+        # --- 4. Symmetrical Recent Opponent Check ---
+        p1_opponents = player_states.get(p1, {}).get('recent_opponents', set())
+        p2_opponents = player_states.get(p2, {}).get('recent_opponents', set())
+
+        if p2 not in p1_opponents and p1 not in p2_opponents:
+            # Found a valid pair
+            pairings.append((p1, p2))
+            paired_players.add(p1)
+            paired_players.add(p2)
+            i += 1
+            j += 1  # Move to the next player on both teams
+        else:
+            # Cannot pair these top players.
+            # This is a simple strategy: skip the lower-scored player of the two.
+            # More complex strategies could be implemented here.
+            if player_states[p1]['score'] >= player_states[p2]['score']:
+                j += 1 # Try to find a different opponent for the higher-ranked p1
+            else:
+                i += 1 # Try to find a different opponent for the higher-ranked p2
+
     return pairings
-
 def run_single_arena_simulation(teams, player_data_dict, h2h_data, duration_seconds, time_control_seconds):
     """Runs one full, dynamic Arena, returning detailed player performance stats."""
     all_players = [p for team_list in teams.values() for p in team_list]
