@@ -3,37 +3,43 @@ import numpy as np
 import itertools
 from tqdm import tqdm
 import random
+import bisect
 from multiprocessing import Pool
+import os
+
 # ==============================================================================
 # ARENA TEAM BATTLE SIMULATION CONFIGURATION - EDIT THIS SECTION
 # ==============================================================================
 TEAMS = {
-    "Team Miller": [
-        "anthonyoja", "mini_verse", "zlater007","zgm-giantkiller", "vegakov",
-       "bayormiller_cno","lexzero2","martins177","tommybrooks","mabunmi_cno","eburu_sanmi","spicypearl8","warlock_dabee",
-    ],
-    "Team Wale": ["presh_1",
-      "ageless_2",
-         "kirekachesschamp","ovokodigood","crazybugg", "ezengwori","hardeywale","clintonsalako","patzernoblechuks","b4elma","prommizex","overgiftedlight","genuine99"
-    ]
+    "millers-crib-": [ "bayormiller_cno","anthonyoja"],
+    "team-hardewale": [ "ageless_2","presh_1"]
 }
 TOURNAMENT_DURATION_MINUTES = 90
 NUM_SIMULATIONS = 1000
 TIME_CONTROL_SECONDS = 120
-WEIGHT_RATING = 0.60
-WEIGHT_H2H = 0.30
-WEIGHT_STYLE = 0.1
-DRAW_PROBABILITY = 0.00001 # Very low, as per Crazyhouse game characteristics
-INFAMY_RATING_THRESHOLD = 2200 # Define threshold for "infamous" players
 
-# Clipping ranges for probabilities
+# --- Feature Weights ---
+WEIGHT_RATING = 0.757
+WEIGHT_H2H = 0.119
+WEIGHT_STYLE = 0.024
+WEIGHT_FORM = 0.100 # Dynamic momentum factor
+
+# --- Game Simulation Parameters ---
+DRAW_PROBABILITY = 0.00001
+INFAMY_RATING_THRESHOLD = 2200
+
+# --- Dynamic Form/Momentum Parameters ---
+FORM_ADJUSTMENT = 0.05  # Adjust by 5% per result
+MAX_FORM = 1.25         # Cap at 125%
+MIN_FORM = 0.75         # Floor at 75%
+FORM_REGRESSION = 0.01  # Tendency to return to normal
+
+# --- Probability Clipping ---
 DEFAULT_CLIP_RANGE = (0.05, 0.95)
-INFAMOUS_CLIP_RANGE_TIGHT = (0.35, 0.65) # Tighter for infamous players with a moderate rating gap
-INFAMOUS_CLIP_RANGE_VERY_TIGHT = (0.45, 0.55) # Even tighter for infamous players with a very small rating gap
-
-# Rating gap thresholds for infamous players
-RATING_GAP_THRESHOLD_1 = 50 # e.g., if gap < 50, use TIGHT
-RATING_GAP_THRESHOLD_2 = 20 # e.g., if gap < 20, use VERY_TIGHT
+INFAMOUS_CLIP_RANGE_TIGHT = (0.35, 0.65)
+INFAMOUS_CLIP_RANGE_VERY_TIGHT = (0.45, 0.55)
+RATING_GAP_THRESHOLD_1 = 50
+RATING_GAP_THRESHOLD_2 = 20
 
 # ==============================================================================
 # CORE SIMULATION LOGIC (ADVANCED)
@@ -52,16 +58,24 @@ def calculate_style_advantage(p1_stats, p2_stats):
     aggressiveness_adv = (p1_stats['Aggressiveness_norm'] - p2_stats['Aggressiveness_norm']) * 0.5
     return (speed_adv + consistency_adv + aggressiveness_adv) / 2.5
 
-def simulate_game_advanced(p1_name, p2_name, p1_stats, p2_stats, h2h_data):
+def simulate_game_advanced(p1_name, p2_name, p1_stats, p2_stats, h2h_data, p1_form=1.0, p2_form=1.0):
     if np.random.rand() < DRAW_PROBABILITY: return 0.5, 0.5
+    
     base_prob_p1 = 1 / (1 + 10**((p2_stats['Current Rating'] - p1_stats['Current Rating']) / 400))
     h2h_adv = calculate_h2h_advantage(p1_name, p2_name, h2h_data)
     style_adv = calculate_style_advantage(p1_stats, p2_stats)
-    matchup_score_p1 = (base_prob_p1 - 0.5) * WEIGHT_RATING + h2h_adv * WEIGHT_H2H + style_adv * WEIGHT_STYLE
+    
+    # Calculate form advantage. A 1.2 form vs 0.8 form is a big advantage.
+    # Add a small epsilon to avoid division by zero if both forms somehow become 0
+    form_adv = (p1_form - p2_form) / (p1_form + p2_form + 1e-6)
+
+    matchup_score_p1 = (base_prob_p1 - 0.5) * WEIGHT_RATING + \
+                       h2h_adv * WEIGHT_H2H + \
+                       style_adv * WEIGHT_STYLE + \
+                       form_adv * WEIGHT_FORM
 
     # Dynamic clipping based on infamy and rating gap
     lower_clip, upper_clip = DEFAULT_CLIP_RANGE
-
     if p1_stats['Current Rating'] >= INFAMY_RATING_THRESHOLD and \
        p2_stats['Current Rating'] >= INFAMY_RATING_THRESHOLD:
         rating_gap = abs(p1_stats['Current Rating'] - p2_stats['Current Rating'])
@@ -74,84 +88,49 @@ def simulate_game_advanced(p1_name, p2_name, p1_stats, p2_stats, h2h_data):
     return (1.0, 0.0) if np.random.rand() < final_prob_p1 else (0.0, 1.0)
 
 def estimate_game_duration(base_time_seconds):
-    min_duration, max_duration = 0.4 * base_time_seconds * 2, 0.9 * base_time_seconds * 2
+    """
+    Realistic game duration model for a 90-minute tournament, aiming for ~22 games/player.
+    """
+    min_duration = 180  # 3 minutes
+    max_duration = 240  # ~5.1 minutes
     return random.uniform(min_duration, max_duration)
 
 def find_pairings(player_states, teams):
-    """
-    Pairs waiting players from two teams based on score, avoiding recent opponents.
-
-    This improved version is more efficient and robust.
-    """
-    # --- 1. Input Validation ---
-    if len(teams) != 2:
-        # Or raise a ValueError, depending on desired behavior
-        print("Error: This function is designed to pair exactly two teams.")
-        return []
-
+    if len(teams) != 2: return []
     team_names = list(teams.keys())
-    team1_name, team2_name = team_names[0], team_names[1]
-
-    # --- 2. Separate and Sort Waiting Players (No change here, this part is good) ---
-    team_waiting_players = {
-        team: sorted(
-            [p for p in players if player_states.get(p, {}).get('status') == 'waiting'],
-            key=lambda p: player_states.get(p, {}).get('score', 0),
-            reverse=True
-        )
-        for team, players in teams.items()
-    }
-
-    team1_players = team_waiting_players[team1_name]
-    team2_players = team_waiting_players[team2_name]
-
+    team1_waiting = sorted([p for p in teams[team_names[0]] if player_states[p]['status'] == 'waiting'], key=lambda p: player_states[p]['score'])
+    team2_waiting = sorted([p for p in teams[team_names[1]] if player_states[p]['status'] == 'waiting'], key=lambda p: player_states[p]['score'])
+    if len(team1_waiting) > len(team2_waiting): team1_waiting, team2_waiting = team2_waiting, team1_waiting
+    team2_scores = [player_states[p]['score'] for p in team2_waiting]
+    team2_available = set(team2_waiting)
     pairings = []
-    paired_players = set()
-    
-    # Pointers for iterating through each team's sorted player list
-    i, j = 0, 0 
-
-    # --- 3. Efficient Pairing Loop ---
-    while i < len(team1_players) and j < len(team2_players):
-        p1 = team1_players[i]
-        p2 = team2_players[j]
-
-        # If p1 is already paired, advance to the next player on that team
-        if p1 in paired_players:
-            i += 1
-            continue
-        
-        # If p2 is already paired, advance to the next player on that team
-        if p2 in paired_players:
-            j += 1
-            continue
-
-        # --- 4. Symmetrical Recent Opponent Check ---
-        p1_opponents = player_states.get(p1, {}).get('recent_opponents', set())
-        p2_opponents = player_states.get(p2, {}).get('recent_opponents', set())
-
-        if p2 not in p1_opponents and p1 not in p2_opponents:
-            # Found a valid pair
-            pairings.append((p1, p2))
-            paired_players.add(p1)
-            paired_players.add(p2)
-            i += 1
-            j += 1  # Move to the next player on both teams
-        else:
-            # Cannot pair these top players.
-            # This is a simple strategy: skip the lower-scored player of the two.
-            # More complex strategies could be implemented here.
-            if player_states[p1]['score'] >= player_states[p2]['score']:
-                j += 1 # Try to find a different opponent for the higher-ranked p1
-            else:
-                i += 1 # Try to find a different opponent for the higher-ranked p2
-
+    for p1 in team1_waiting:
+        if not team2_available: break
+        p1_recent_opponents = set(player_states[p1]['recent_opponents'])
+        ideal_idx = bisect.bisect_left(team2_scores, player_states[p1]['score'])
+        best_opponent_found = None
+        left_ptr, right_ptr = ideal_idx - 1, ideal_idx
+        while left_ptr >= 0 or right_ptr < len(team2_waiting):
+            search_indices = []
+            if right_ptr < len(team2_waiting): search_indices.append(right_ptr)
+            if left_ptr >= 0: search_indices.append(left_ptr)
+            for opponent_idx in search_indices:
+                p2 = team2_waiting[opponent_idx]
+                if p2 in team2_available and p2 not in p1_recent_opponents:
+                    best_opponent_found = p2
+                    break
+            if best_opponent_found: break
+            left_ptr -= 1
+            right_ptr += 1
+        if best_opponent_found:
+            pairings.append((p1, best_opponent_found))
+            team2_available.remove(best_opponent_found)
     return pairings
-def run_single_arena_simulation(teams, player_data_dict, h2h_data, duration_seconds, time_control_seconds):
-    """Runs one full, dynamic Arena, returning detailed player performance stats."""
+
+def run_single_arena_simulation(teams, player_data_dict, h2h_data, duration_seconds, time_control_seconds, top_n_players=None):
     all_players = [p for team_list in teams.values() for p in team_list]
     player_states = {p: {'score': 0, 'status': 'waiting', 'recent_opponents': [], 'streak': 0,
-                         'sheet': '', 'opponent_list': []} for p in all_players}
+                         'sheet': '', 'opponent_list': [], 'form': 1.0} for p in all_players}
     current_time, active_games = 0, {}
 
     while current_time < duration_seconds:
@@ -160,7 +139,7 @@ def run_single_arena_simulation(teams, player_data_dict, h2h_data, duration_seco
             finish_time = current_time + estimate_game_duration(time_control_seconds)
             player_states[p1_name]['status'], player_states[p2_name]['status'] = 'playing', 'playing'
             active_games[(p1_name, p2_name)] = finish_time
-    
+
         if not active_games: break
         
         (p1_finished, p2_finished), next_finish_time = min(active_games.items(), key=lambda item: item[1])
@@ -168,13 +147,16 @@ def run_single_arena_simulation(teams, player_data_dict, h2h_data, duration_seco
         
         if current_time >= duration_seconds: break
 
-        p1_stats, p2_stats = player_data_dict[p1_finished], player_data_dict[p2_finished]
-        p1_score, p2_score = simulate_game_advanced(p1_finished, p2_finished, p1_stats, p2_stats, h2h_data)
-        
-        # --- SCORE SHEET AND OPPONENT TRACKING ---
+        p1_stats = player_data_dict[p1_finished]
+        p2_stats = player_data_dict[p2_finished]
+        p1_form = player_states[p1_finished]['form']
+        p2_form = player_states[p2_finished]['form']
+        p1_score, p2_score = simulate_game_advanced(p1_finished, p2_finished, p1_stats, p2_stats, h2h_data, p1_form, p2_form)
+
         player_states[p1_finished]['opponent_list'].append(p2_finished)
         player_states[p2_finished]['opponent_list'].append(p1_finished)
         
+        # Update Player 1
         if p1_score == 1:
             player_states[p1_finished]['streak'] += 1
             points_to_add = 2 if player_states[p1_finished]['streak'] < 3 else 4
@@ -189,6 +171,7 @@ def run_single_arena_simulation(teams, player_data_dict, h2h_data, duration_seco
             player_states[p1_finished]['sheet'] += '0'
         player_states[p1_finished]['score'] += points_to_add
         
+        # Update Player 2
         if p2_score == 1:
             player_states[p2_finished]['streak'] += 1
             points_to_add = 2 if player_states[p2_finished]['streak'] < 3 else 4
@@ -201,68 +184,81 @@ def run_single_arena_simulation(teams, player_data_dict, h2h_data, duration_seco
             player_states[p2_finished]['streak'] = 0
             points_to_add = 0
             player_states[p2_finished]['sheet'] += '0'
+        # --- BUG FIX: This line was incorrectly indented. It is now correct. ---
         player_states[p2_finished]['score'] += points_to_add
+                
+        # Update form for Player 1
+        if p1_score == 1.0:
+            player_states[p1_finished]['form'] = min(MAX_FORM, player_states[p1_finished]['form'] + FORM_ADJUSTMENT)
+        elif p1_score == 0.0:
+            player_states[p1_finished]['form'] = max(MIN_FORM, player_states[p1_finished]['form'] - FORM_ADJUSTMENT)
+        else:
+            if player_states[p1_finished]['form'] > 1.0: player_states[p1_finished]['form'] -= FORM_REGRESSION
+            else: player_states[p1_finished]['form'] += FORM_REGRESSION
+        
+        # Update form for Player 2
+        if p2_score == 1.0:
+            player_states[p2_finished]['form'] = min(MAX_FORM, player_states[p2_finished]['form'] + FORM_ADJUSTMENT)
+        elif p2_score == 0.0:
+            player_states[p2_finished]['form'] = max(MIN_FORM, player_states[p2_finished]['form'] - FORM_ADJUSTMENT)
+        else:
+            if player_states[p2_finished]['form'] > 1.0: player_states[p2_finished]['form'] -= FORM_REGRESSION
+            else: player_states[p2_finished]['form'] += FORM_REGRESSION
 
-        player_states[p1_finished]['status'], player_states[p2_finished]['status'] = 'waiting', 'waiting'
-        player_states[p1_finished]['recent_opponents'] = [p2_finished] + player_states[p1_finished]['recent_opponents'][:1]
-        player_states[p2_finished]['recent_opponents'] = [p1_finished] + player_states[p2_finished]['recent_opponents'][:1]
+        player_states[p1_finished]['status'] = 'waiting'
+        player_states[p2_finished]['status'] = 'waiting'
+        player_states[p1_finished]['recent_opponents'] = [p2_finished] + player_states[p1_finished]['recent_opponents'][:2]
+        player_states[p2_finished]['recent_opponents'] = [p1_finished] + player_states[p2_finished]['recent_opponents'][:2]
         del active_games[(p1_finished, p2_finished)]
 
     final_player_details = pd.DataFrame(player_states).T
-    final_team_scores = {name: 0 for name in teams}
     player_to_team = {player: name for name, players in teams.items() for player in players}
-    for p_name, p_score in final_player_details['score'].items():
-        final_team_scores[player_to_team[p_name]] += p_score
+    final_player_details['team'] = final_player_details.index.map(player_to_team)
 
+    if top_n_players and top_n_players > 0:
+        final_team_scores = final_player_details.groupby('team')['score'].apply(lambda x: x.nlargest(top_n_players).sum()).to_dict()
+    else:
+        final_team_scores = final_player_details.groupby('team')['score'].sum().to_dict()
+
+    for team_name in teams:
+        if team_name not in final_team_scores: final_team_scores[team_name] = 0
+            
     return pd.Series(final_team_scores), final_player_details
 
 def build_h2h_wins_dict_from_games(games_df):
-    """Creates a dictionary mapping (winner, loser) to win counts for fast H2H lookup."""
     return games_df.groupby(['winner_name', 'loser_name']).size().to_dict()
+
 def run_simulation_wrapper(_):
     return run_single_arena_simulation(
         TEAMS,
         player_data_dict, 
-        h2h_wins_dict, # Pass the new H2H dictionary
+        h2h_wins_dict,
         TOURNAMENT_DURATION_MINUTES * 60,
         TIME_CONTROL_SECONDS
     )
-# ==============================================================================
-# MAIN EXECUTION BLOCK
-# ==============================================================================
-import os
 
 def analyze_and_display_results(team_results_df, player_scores_df, player_data_df, teams, num_simulations, duration_minutes):
-    """Analyzes simulation results and prints a clean, insightful report."""
-    
-    # 1. Calculate Win Percentages
     winners = []
     for i in range(len(team_results_df)):
         row = team_results_df.iloc[i]
-        if (row == row.max()).sum() > 1:
-            winners.append('Draw')
-        else:
-            winners.append(row.idxmax())
+        if (row == row.max()).sum() > 1: winners.append('Draw')
+        else: winners.append(row.idxmax())
     win_percentages = (pd.Series(winners).value_counts() / num_simulations * 100).fillna(0)
 
-    # 2. Create Player Performance Report
     all_players = [p for team_list in teams.values() for p in team_list]
     player_report = pd.DataFrame(index=all_players)
     player_report['Team'] = {p: name for name, players in teams.items() for p in players}
     player_report['Avg Score'] = player_scores_df.mean(axis=0)
     player_report['Rating'] = player_report.index.map(player_data_df['Current Rating'])
 
-    # 3. Identify High Performers and Weak Links
     for team_name in teams.keys():
         team_df = player_report[player_report['Team'] == team_name].copy()
         team_df['Rating Rank'] = team_df['Rating'].rank(ascending=False, method='min')
         team_df['Performance Rank'] = team_df['Avg Score'].rank(ascending=False, method='min')
         team_df['Rank Delta'] = team_df['Rating Rank'] - team_df['Performance Rank']
-        
         player_report.loc[team_df.index, 'Performance Rank'] = team_df['Performance Rank']
         player_report.loc[team_df.index, 'Rank Delta'] = team_df['Rank Delta']
 
-    # 4. Print the new, clean report
     print("\n\n=======================================================================")
     print("            DYNAMIC ARENA TEAM BATTLE PREDICTIONS")
     print("=======================================================================")
@@ -286,11 +282,9 @@ def analyze_and_display_results(team_results_df, player_scores_df, player_data_d
         team_view['Rank Delta'] = team_view['Rank Delta'].apply(lambda x: f"+{x}" if x > 0 else str(x))
         print(team_view[['Avg Score', 'Performance Rank', 'Rating', 'Rank Delta']].sort_values(by='Avg Score', ascending=False).round(1).to_string())
         print("")
-
     print("=======================================================================")
 
 if __name__ == "__main__":
-
     try:
         player_data_df = pd.read_csv('player_features.csv', index_col='player_name')
         games_df = pd.read_csv('all_games.csv')
@@ -308,12 +302,11 @@ if __name__ == "__main__":
     player_data_dict = player_data_df.to_dict('index')
 
     print(f"\n--- Starting Dynamic Arena Team Battle Simulation ---")
-
     try:
         NUM_PROCESSES = os.cpu_count()
         print(f"Using {NUM_PROCESSES} CPU cores for parallel processing.")
     except NotImplementedError:
-        NUM_PROCESSES = 4 # Fallback value
+        NUM_PROCESSES = 4
         print("Could not determine number of CPUs, falling back to 4.")
 
     with Pool(processes=NUM_PROCESSES) as pool:

@@ -4,7 +4,7 @@ import glicko2
 from html_report_generator import load_json_file
 
 SOURCE_DIR_GAMES = "detailed_games"
-GLICKO_RD_CUTOFF = 80
+GLICKO_RD_CUTOFF = 50
 DATA_DIR = "data_output_lastweek"
 
 

@@ -7,9 +7,9 @@ import numpy as np
 # --- CONFIGURATION ---
 ARENA_DATA_FOLDER = './tournament_cache'
 GAMES_DATA_FOLDER = './detailed_games'
-MIN_GAMES_THRESHOLD_OVERALL = 50
+MIN_GAMES_THRESHOLD_OVERALL = 30
 MIN_GAMES_PER_TOURNAMENT = 5
-H2H_MIN_GAMES_FOR_RIVALRY = 10
+H2H_MIN_GAMES_FOR_RIVALRY = 5
 GIANT_SLAYER_RATING_DIFF = 200
 
 # --- USERNAME MAPPING (Case-Insensitive) ---
@@ -35,7 +35,49 @@ for primary_name in USERNAME_ALIAS_TO_PRIMARY.values():
 # DATA PROCESSING FUNCTIONS
 # ==============================================================================
 
-def load_and_process_data():
+def get_2_plus_0_tournament_ids():
+    """
+    Scans the detailed_games folder to find tournaments with a 2+0 time control.
+    Returns a list of tournament IDs.
+    """
+    tournament_ids = []
+    if os.path.exists(GAMES_DATA_FOLDER):
+        for filename in os.listdir(GAMES_DATA_FOLDER):
+            if filename.endswith('.json'):
+                file_path = os.path.join(GAMES_DATA_FOLDER, filename)
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    try:
+                        games_list = json.load(f)
+                        if isinstance(games_list, list) and len(games_list) > 0:
+                            first_game = games_list[0]
+                            if 'time_control' in first_game and first_game['time_control'] == '120+0':
+                                tournament_ids.append(filename.replace('.json', ''))
+                    except json.JSONDecodeError:
+                        print(f"Warning: Could not decode JSON from {filename}")
+    return tournament_ids
+def get_only_team_battles():
+  """
+  Scans the tournament cache to find all tournaments that are team battles
+  Returns a list of tournament ids
+  """
+  tournament_ids = []
+  if os.path.exists(ARENA_DATA_FOLDER):
+        for filename in os.listdir(ARENA_DATA_FOLDER):
+            if filename.endswith('.json'):
+                file_path = os.path.join(ARENA_DATA_FOLDER, filename)
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    try:
+                        tournament_dict = json.load(f)
+                        if isinstance(tournament_dict, dict) and len(tournament_dict) > 0 and "teamStanding" in tournament_dict:
+                          tournament_ids.append(filename.replace('.json', ''))
+                                
+                    except json.JSONDecodeError:
+                        print(f"Warning: Could not decode JSON from {filename}")
+  return tournament_ids
+  
+  
+
+def load_and_process_data(tournament_ids=None):
     """Loads and processes all data from both folders."""
     print("--- Step 1 of 4: Loading and Processing Raw Data Files ---")
     
@@ -43,6 +85,8 @@ def load_and_process_data():
     if os.path.exists(ARENA_DATA_FOLDER):
         for filename in os.listdir(ARENA_DATA_FOLDER):
             if filename.endswith('.json'):
+                if tournament_ids and filename.replace('.json', '') not in tournament_ids:
+                    continue
                 file_path = os.path.join(ARENA_DATA_FOLDER, filename)
                 with open(file_path, 'r', encoding='utf-8') as f:
                     try:
@@ -79,6 +123,8 @@ def load_and_process_data():
     if os.path.exists(GAMES_DATA_FOLDER):
         for filename in os.listdir(GAMES_DATA_FOLDER):
              if filename.endswith('.json'):
+                if tournament_ids and filename.replace('.json', '') not in tournament_ids:
+                    continue
                 file_path = os.path.join(GAMES_DATA_FOLDER, filename)
                 with open(file_path, 'r', encoding='utf-8') as f:
                     try:
@@ -217,8 +263,8 @@ def create_player_profiles(games_df, z_scores_df, norm_ppg_df, arena_df, qualifi
                     rivalry_stats.append({'opponent': opponent, 'win_pct': (wins / (wins + losses)) * 100})
         if rivalry_stats:
             sorted_rivals = sorted(rivalry_stats, key=lambda x: x['win_pct'], reverse=True)
-            favorite_opponents[player_name] = [f"{r['opponent']} ({r['win_pct']:.0f}%)" for r in sorted_rivals[:3]]
-            nemesis_players[player_name] = [f"{r['opponent']} ({r['win_pct']:.0f}%)" for r in sorted(rivalry_stats, key=lambda x: x['win_pct'])[:3]]
+            favorite_opponents[player_name] = [f"{r['opponent']} ({r['win_pct']:.0f}%)" for r in sorted_rivals[:5]]
+            nemesis_players[player_name] = [f"{r['opponent']} ({r['win_pct']:.0f}%)" for r in sorted(rivalry_stats, key=lambda x: x['win_pct'])[:5]]
     
     profiles_df['Favorite Opponents'] = profiles_df.index.map(favorite_opponents)
     profiles_df['Nemesis Players'] = profiles_df.index.map(nemesis_players)
@@ -276,60 +322,72 @@ def rank_players_by_strategy(report_df, weights):
 # ==============================================================================
 if __name__ == "__main__":
     
-    games_df, arena_df = load_and_process_data()
+    tournament_ids = get_only_team_battles()
+    
+    if not tournament_ids:
+        print("No tournaments with 2+0 time control found.")
+        exit()
+        
+    print(f"Found {len(tournament_ids)} tournaments with 2+0 time control.")
+    
+    games_df, arena_df = load_and_process_data(tournament_ids)
 
-    if not games_df.empty:
-        z_scores_df, norm_ppg_df = calculate_performance_metrics(arena_df)
+    if arena_df.empty:
+        print("\nNo arena data found for the specified time control. Exiting.")
+        exit()
         
-        player_game_counts = games_df['winner_name'].value_counts().add(games_df['loser_name'].value_counts(), fill_value=0)
-        qualified_players = player_game_counts[player_game_counts >= MIN_GAMES_THRESHOLD_OVERALL].index.tolist()
-        
-        print("--- Step 4 of 4: Generating Final Reports ---")
-        
-        report_df = create_player_profiles(games_df, z_scores_df, norm_ppg_df, arena_df, qualified_players)
-        
-        # Output 1: The Main Player Scouting Report
-        print("\n\n=======================================================================================================")
-        print("                                     PLAYER SCOUTING REPORT")
-        print("=======================================================================================================")
-        pd.set_option('display.max_rows', 200)
-        pd.set_option('display.width', 180)
-        pd.set_option('display.max_colwidth', 40)
-        
-        final_columns = [
-            'Current Rating', 'True Avg Performance', 'Consistency', 'Speed', 'Aggressiveness', 
-            'Avg Points Per Game', 'Avg Games (Stamina)', 'Giant-Slayer Rate', 
-            'Favorite Opponents', 'Nemesis Players','Berserk Win Rate'
-        ]
-        final_columns = [col for col in final_columns if col in report_df.columns]
-        print(report_df[final_columns].sort_values(by='True Avg Performance', ascending=False).round(2))
-        
-        # Output 2: The Strategic Ranking Report
-        print("\n\n=======================================================================================================")
-        print("                                     STRATEGIC TEAM RANKING")
-        print("=======================================================================================================")
-        
-        strategy_weights = {
-            'True Avg Performance':      0.4, 'Consistency':               0.2, 
-            'Avg Games (Stamina)':       0.2, 'Speed':                     0.2, 
-            'Aggressiveness':            0.0, 'Giant-Slayer Rate':         0.0,
-        }
-        
-        print(f"Ranking players based on the defined strategy weights...")
-        ranked_report = rank_players_by_strategy(report_df, strategy_weights)
-        
-        ranked_display_cols = [
-            'Suitability Score', 'True Avg Performance', 'Consistency', 'Speed', 'Aggressiveness', 
-            'Avg Points Per Game', 'Avg Games (Stamina)', 'Giant-Slayer Rate','Berserk Win Rate'
-        ]
-        ranked_display_cols = [col for col in ranked_display_cols if col in ranked_report.columns]
-        print(ranked_report[ranked_display_cols].head(15).round(2))
-        print("=======================================================================================================")
-        
-        print("\nSaving final player data to 'player_features.csv' for simulation...")
-        report_df.to_csv('player_features.csv')
-        games_df.to_csv('all_games.csv', index=False)
-        print("Save complete.")
-
-    else:
+    if games_df.empty:
         print("\nNo individual game data found. Cannot create features.")
+        exit()
+
+    z_scores_df, norm_ppg_df = calculate_performance_metrics(arena_df)
+    
+    player_game_counts = games_df['winner_name'].value_counts().add(games_df['loser_name'].value_counts(), fill_value=0)
+    qualified_players = player_game_counts[player_game_counts >= MIN_GAMES_THRESHOLD_OVERALL].index.tolist()
+    
+    print("--- Step 4 of 4: Generating Final Reports ---")
+    
+    report_df = create_player_profiles(games_df, z_scores_df, norm_ppg_df, arena_df, qualified_players)
+    
+    # Output 1: The Main Player Scouting Report
+    print("\n\n=======================================================================================================")
+    print("                                     PLAYER SCOUTING REPORT")
+    print("=======================================================================================================")
+    pd.set_option('display.max_rows', 200)
+    pd.set_option('display.width', 180)
+    pd.set_option('display.max_colwidth', 40)
+    
+    final_columns = [
+        'Current Rating', 'True Avg Performance', 'Consistency', 'Speed', 'Aggressiveness', 
+        'Avg Points Per Game', 'Avg Games (Stamina)', 'Giant-Slayer Rate', 
+        'Favorite Opponents', 'Nemesis Players','Berserk Win Rate'
+    ]
+    final_columns = [col for col in final_columns if col in report_df.columns]
+    print(report_df[final_columns].sort_values(by='True Avg Performance', ascending=False).round(2))
+    
+    # Output 2: The Strategic Ranking Report
+    print("\n\n=======================================================================================================")
+    print("                                     STRATEGIC TEAM RANKING")
+    print("=======================================================================================================")
+    
+    strategy_weights = {
+        'True Avg Performance':      0.4, 'Consistency':               0.2, 
+        'Avg Games (Stamina)':       0.2, 'Speed':                     0.2, 
+        'Aggressiveness':            0.0, 'Giant-Slayer Rate':         0.0,
+    }
+    
+    print(f"Ranking players based on the defined strategy weights...")
+    ranked_report = rank_players_by_strategy(report_df, strategy_weights)
+    
+    ranked_display_cols = [
+        'Suitability Score', 'True Avg Performance', 'Consistency', 'Speed', 'Aggressiveness', 
+        'Avg Points Per Game', 'Avg Games (Stamina)', 'Giant-Slayer Rate','Berserk Win Rate'
+    ]
+    ranked_display_cols = [col for col in ranked_display_cols if col in ranked_report.columns]
+    print(ranked_report[ranked_display_cols].head(15).round(2))
+    print("=======================================================================================================")
+    
+    print("\nSaving final player data to 'player_features.csv' for simulation...")
+    report_df.to_csv('player_features.csv')
+    games_df.to_csv('all_games.csv', index=False)
+    print("Save complete.")
