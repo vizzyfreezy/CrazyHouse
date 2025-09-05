@@ -89,42 +89,59 @@ def simulate_game_advanced(p1_name, p2_name, p1_stats, p2_stats, h2h_data, p1_fo
 
 def estimate_game_duration(base_time_seconds):
     """
-    Realistic game duration model for a 90-minute tournament, aiming for ~22 games/player.
+    Realistic game duration model for a 90-minute tournament.
     """
-    min_duration = 180  # 3 minutes
-    max_duration = 240  # ~5.1 minutes
+    # Games are estimated to last between 75% and 125% of the base time control.
+    min_duration = base_time_seconds * 0.75
+    max_duration = base_time_seconds * 1.25
     return random.uniform(min_duration, max_duration)
 
 def find_pairings(player_states, teams):
     if len(teams) != 2: return []
     team_names = list(teams.keys())
+    # Sort waiting players by score
     team1_waiting = sorted([p for p in teams[team_names[0]] if player_states[p]['status'] == 'waiting'], key=lambda p: player_states[p]['score'])
     team2_waiting = sorted([p for p in teams[team_names[1]] if player_states[p]['status'] == 'waiting'], key=lambda p: player_states[p]['score'])
-    if len(team1_waiting) > len(team2_waiting): team1_waiting, team2_waiting = team2_waiting, team1_waiting
-    team2_scores = [player_states[p]['score'] for p in team2_waiting]
-    team2_available = set(team2_waiting)
+
+    # Ensure team1 is the smaller team to minimize iterations
+    if len(team1_waiting) > len(team2_waiting):
+        team1_waiting, team2_waiting = team2_waiting, team1_waiting
+
     pairings = []
+    # Create a mutable list of opponents to pair against
+    available_opponents = list(team2_waiting)
+
     for p1 in team1_waiting:
-        if not team2_available: break
+        if not available_opponents:
+            break  # No more opponents to pair with
+
+        p1_score = player_states[p1]['score']
         p1_recent_opponents = set(player_states[p1]['recent_opponents'])
-        ideal_idx = bisect.bisect_left(team2_scores, player_states[p1]['score'])
-        best_opponent_found = None
-        left_ptr, right_ptr = ideal_idx - 1, ideal_idx
-        while left_ptr >= 0 or right_ptr < len(team2_waiting):
-            search_indices = []
-            if right_ptr < len(team2_waiting): search_indices.append(right_ptr)
-            if left_ptr >= 0: search_indices.append(left_ptr)
-            for opponent_idx in search_indices:
-                p2 = team2_waiting[opponent_idx]
-                if p2 in team2_available and p2 not in p1_recent_opponents:
-                    best_opponent_found = p2
-                    break
-            if best_opponent_found: break
-            left_ptr -= 1
-            right_ptr += 1
-        if best_opponent_found:
-            pairings.append((p1, best_opponent_found))
-            team2_available.remove(best_opponent_found)
+
+        # Find the best opponent for p1 from the available list
+        best_opponent = None
+        best_score_diff = float('inf')
+        
+        # Filter out recent opponents first
+        potential_opponents = [p2 for p2 in available_opponents if p2 not in p1_recent_opponents]
+        
+        if not potential_opponents:
+            # If all available opponents have been recently played,
+            # fall back to pairing with anyone available to avoid getting stuck.
+            potential_opponents = available_opponents
+
+        # Find opponent with the closest score
+        for p2 in potential_opponents:
+            p2_score = player_states[p2]['score']
+            score_diff = abs(p1_score - p2_score)
+            if score_diff < best_score_diff:
+                best_score_diff = score_diff
+                best_opponent = p2
+        
+        if best_opponent:
+            pairings.append((p1, best_opponent))
+            available_opponents.remove(best_opponent)
+
     return pairings
 
 def run_single_arena_simulation(teams, player_data_dict, h2h_data, duration_seconds, time_control_seconds, top_n_players=None):
